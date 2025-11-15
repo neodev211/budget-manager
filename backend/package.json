@@ -14,7 +14,12 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio"
   },
-  "keywords": ["budget", "management", "expense", "tracking"],
+  "keywords": [
+    "budget",
+    "management",
+    "expense",
+    "tracking"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
@@ -22,7 +27,9 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
-    "prisma": "^6.19.0"
+    "inversify": "^6.0.2",
+    "prisma": "^6.19.0",
+    "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
