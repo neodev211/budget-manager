@@ -1,0 +1,79 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// BUDGETING DOMAIN
+model Category {
+  id             String    @id @default(uuid())
+  name           String
+  period         String    // Format: "2025-10" (YYYY-MM)
+  monthlyBudget  Decimal   @map("monthly_budget") @db.Decimal(10, 2)
+  notes          String?
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  provisions     Provision[]
+  expenses       Expense[]
+
+  @@unique([name, period])
+  @@map("categories")
+}
+
+model Provision {
+  id         String   @id @default(uuid())
+  item       String
+  categoryId String   @map("category_id")
+  amount     Decimal  @db.Decimal(10, 2) // Siempre negativo
+  dueDate    DateTime @map("due_date")
+  status     ProvisionStatus @default(OPEN)
+  notes      String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  expenses   Expense[]
+
+  @@map("provisions")
+}
+
+// EXPENSES DOMAIN
+model Expense {
+  id            String   @id @default(uuid())
+  date          DateTime
+  description   String
+  categoryId    String   @map("category_id")
+  provisionId   String?  @map("provision_id")
+  amount        Decimal  @db.Decimal(10, 2) // Siempre negativo
+  paymentMethod PaymentMethod @default(CASH) @map("payment_method")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  category      Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  provision     Provision? @relation(fields: [provisionId], references: [id], onDelete: SetNull)
+
+  @@map("expenses")
+}
+
+// ENUMS
+enum ProvisionStatus {
+  OPEN
+  CLOSED
+}
+
+enum PaymentMethod {
+  CASH
+  TRANSFER
+  CARD
+  OTHER
+}
