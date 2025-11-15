@@ -8,11 +8,9 @@ import { IExpenseRepository } from '../../domain/repositories/IExpenseRepository
 import { IProvisionRepository } from '../../domain/repositories/IProvisionRepository';
 
 // ===== Repository Implementations (Prisma) =====
-// Note: These will be created in Phase 5 when we implement controllers
-// They will use PrismaClient and mappers created in Phase 2
-// import { PrismaCategoryRepository } from '../persistence/prisma/repositories/PrismaCategoryRepository';
-// import { PrismaExpenseRepository } from '../persistence/prisma/repositories/PrismaExpenseRepository';
-// import { PrismaProvisionRepository } from '../persistence/prisma/repositories/PrismaProvisionRepository';
+import { PrismaCategoryRepository } from '../persistence/prisma/repositories/PrismaCategoryRepository';
+import { PrismaExpenseRepository } from '../persistence/prisma/repositories/PrismaExpenseRepository';
+import { PrismaProvisionRepository } from '../persistence/prisma/repositories/PrismaProvisionRepository';
 
 // ===== Category Use Cases =====
 import {
@@ -139,142 +137,216 @@ export class DIContainer {
   // ===== Use Case Getters =====
   // These methods provide type-safe access to use cases
 
+  // ===== Singleton Instances =====
+  private static categoryRepository: ICategoryRepository | null = null;
+  private static expenseRepository: IExpenseRepository | null = null;
+  private static provisionRepository: IProvisionRepository | null = null;
+
+  /**
+   * Get the singleton category repository (Prisma implementation)
+   */
+  private static getCategoryRepository(): ICategoryRepository {
+    if (!DIContainer.categoryRepository) {
+      DIContainer.categoryRepository = new PrismaCategoryRepository();
+    }
+    return DIContainer.categoryRepository;
+  }
+
+  /**
+   * Get the singleton expense repository (Prisma implementation)
+   */
+  private static getExpenseRepository(): IExpenseRepository {
+    if (!DIContainer.expenseRepository) {
+      DIContainer.expenseRepository = new PrismaExpenseRepository();
+    }
+    return DIContainer.expenseRepository;
+  }
+
+  /**
+   * Get the singleton provision repository (Prisma implementation)
+   */
+  private static getProvisionRepository(): IProvisionRepository {
+    if (!DIContainer.provisionRepository) {
+      DIContainer.provisionRepository = new PrismaProvisionRepository();
+    }
+    return DIContainer.provisionRepository;
+  }
+
+  /**
+   * Get the category repository directly (for internal use in controllers)
+   */
+  static getCategoryRepositoryInstance(): ICategoryRepository {
+    return DIContainer.getCategoryRepository();
+  }
+
+  /**
+   * Get the expense repository directly (for internal use in controllers)
+   */
+  static getExpenseRepositoryInstance(): IExpenseRepository {
+    return DIContainer.getExpenseRepository();
+  }
+
+  /**
+   * Get the provision repository directly (for internal use in controllers)
+   */
+  static getProvisionRepositoryInstance(): IProvisionRepository {
+    return DIContainer.getProvisionRepository();
+  }
+
   /**
    * Get CreateCategoryUseCase instance
    */
   static getCreateCategoryUseCase(
-    categoryRepository: ICategoryRepository
+    categoryRepository?: ICategoryRepository
   ): CreateCategoryUseCase {
-    return new CreateCategoryUseCase(categoryRepository);
+    const repo = categoryRepository || DIContainer.getCategoryRepository();
+    return new CreateCategoryUseCase(repo);
   }
 
   /**
    * Get GetCategoriesUseCase instance
    */
   static getGetCategoriesUseCase(
-    categoryRepository: ICategoryRepository
+    categoryRepository?: ICategoryRepository
   ): GetCategoriesUseCase {
-    return new GetCategoriesUseCase(categoryRepository);
+    const repo = categoryRepository || DIContainer.getCategoryRepository();
+    return new GetCategoriesUseCase(repo);
   }
 
   /**
    * Get GetCategoryByIdUseCase instance
    */
   static getGetCategoryByIdUseCase(
-    categoryRepository: ICategoryRepository
+    categoryRepository?: ICategoryRepository
   ): GetCategoryByIdUseCase {
-    return new GetCategoryByIdUseCase(categoryRepository);
+    const repo = categoryRepository || DIContainer.getCategoryRepository();
+    return new GetCategoryByIdUseCase(repo);
   }
 
   /**
    * Get UpdateCategoryUseCase instance
    */
   static getUpdateCategoryUseCase(
-    categoryRepository: ICategoryRepository
+    categoryRepository?: ICategoryRepository
   ): UpdateCategoryUseCase {
-    return new UpdateCategoryUseCase(categoryRepository);
+    const repo = categoryRepository || DIContainer.getCategoryRepository();
+    return new UpdateCategoryUseCase(repo);
   }
 
   /**
    * Get DeleteCategoryUseCase instance
    */
   static getDeleteCategoryUseCase(
-    categoryRepository: ICategoryRepository
+    categoryRepository?: ICategoryRepository
   ): DeleteCategoryUseCase {
-    return new DeleteCategoryUseCase(categoryRepository);
+    const repo = categoryRepository || DIContainer.getCategoryRepository();
+    return new DeleteCategoryUseCase(repo);
   }
 
   /**
    * Get CreateExpenseUseCase instance
    */
   static getCreateExpenseUseCase(
-    expenseRepository: IExpenseRepository,
-    categoryRepository: ICategoryRepository
+    expenseRepository?: IExpenseRepository,
+    categoryRepository?: ICategoryRepository
   ): CreateExpenseUseCase {
-    return new CreateExpenseUseCase(expenseRepository, categoryRepository);
+    const expRepo = expenseRepository || DIContainer.getExpenseRepository();
+    const catRepo = categoryRepository || DIContainer.getCategoryRepository();
+    return new CreateExpenseUseCase(expRepo, catRepo);
   }
 
   /**
    * Get GetExpensesUseCase instance
    */
   static getGetExpensesUseCase(
-    expenseRepository: IExpenseRepository
+    expenseRepository?: IExpenseRepository
   ): GetExpensesUseCase {
-    return new GetExpensesUseCase(expenseRepository);
+    const repo = expenseRepository || DIContainer.getExpenseRepository();
+    return new GetExpensesUseCase(repo);
   }
 
   /**
    * Get GetExpenseByIdUseCase instance
    */
   static getGetExpenseByIdUseCase(
-    expenseRepository: IExpenseRepository
+    expenseRepository?: IExpenseRepository
   ): GetExpenseByIdUseCase {
-    return new GetExpenseByIdUseCase(expenseRepository);
+    const repo = expenseRepository || DIContainer.getExpenseRepository();
+    return new GetExpenseByIdUseCase(repo);
   }
 
   /**
    * Get UpdateExpenseUseCase instance
    */
   static getUpdateExpenseUseCase(
-    expenseRepository: IExpenseRepository,
-    categoryRepository: ICategoryRepository
+    expenseRepository?: IExpenseRepository,
+    categoryRepository?: ICategoryRepository
   ): UpdateExpenseUseCase {
-    return new UpdateExpenseUseCase(expenseRepository, categoryRepository);
+    const expRepo = expenseRepository || DIContainer.getExpenseRepository();
+    const catRepo = categoryRepository || DIContainer.getCategoryRepository();
+    return new UpdateExpenseUseCase(expRepo, catRepo);
   }
 
   /**
    * Get DeleteExpenseUseCase instance
    */
   static getDeleteExpenseUseCase(
-    expenseRepository: IExpenseRepository
+    expenseRepository?: IExpenseRepository
   ): DeleteExpenseUseCase {
-    return new DeleteExpenseUseCase(expenseRepository);
+    const repo = expenseRepository || DIContainer.getExpenseRepository();
+    return new DeleteExpenseUseCase(repo);
   }
 
   /**
    * Get CreateProvisionUseCase instance
    */
   static getCreateProvisionUseCase(
-    provisionRepository: IProvisionRepository,
-    categoryRepository: ICategoryRepository
+    provisionRepository?: IProvisionRepository,
+    categoryRepository?: ICategoryRepository
   ): CreateProvisionUseCase {
-    return new CreateProvisionUseCase(provisionRepository, categoryRepository);
+    const provRepo = provisionRepository || DIContainer.getProvisionRepository();
+    const catRepo = categoryRepository || DIContainer.getCategoryRepository();
+    return new CreateProvisionUseCase(provRepo, catRepo);
   }
 
   /**
    * Get GetProvisionsUseCase instance
    */
   static getGetProvisionsUseCase(
-    provisionRepository: IProvisionRepository
+    provisionRepository?: IProvisionRepository
   ): GetProvisionsUseCase {
-    return new GetProvisionsUseCase(provisionRepository);
+    const repo = provisionRepository || DIContainer.getProvisionRepository();
+    return new GetProvisionsUseCase(repo);
   }
 
   /**
    * Get GetProvisionByIdUseCase instance
    */
   static getGetProvisionByIdUseCase(
-    provisionRepository: IProvisionRepository
+    provisionRepository?: IProvisionRepository
   ): GetProvisionByIdUseCase {
-    return new GetProvisionByIdUseCase(provisionRepository);
+    const repo = provisionRepository || DIContainer.getProvisionRepository();
+    return new GetProvisionByIdUseCase(repo);
   }
 
   /**
    * Get UpdateProvisionUseCase instance
    */
   static getUpdateProvisionUseCase(
-    provisionRepository: IProvisionRepository
+    provisionRepository?: IProvisionRepository
   ): UpdateProvisionUseCase {
-    return new UpdateProvisionUseCase(provisionRepository);
+    const repo = provisionRepository || DIContainer.getProvisionRepository();
+    return new UpdateProvisionUseCase(repo);
   }
 
   /**
    * Get DeleteProvisionUseCase instance
    */
   static getDeleteProvisionUseCase(
-    provisionRepository: IProvisionRepository
+    provisionRepository?: IProvisionRepository
   ): DeleteProvisionUseCase {
-    return new DeleteProvisionUseCase(provisionRepository);
+    const repo = provisionRepository || DIContainer.getProvisionRepository();
+    return new DeleteProvisionUseCase(repo);
   }
 }
 
