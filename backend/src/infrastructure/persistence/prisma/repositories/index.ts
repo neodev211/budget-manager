@@ -9,3 +9,4 @@
 export { PrismaCategoryRepository } from './PrismaCategoryRepository';
 export { PrismaExpenseRepository } from './PrismaExpenseRepository';
 export { PrismaProvisionRepository } from './PrismaProvisionRepository';
+export { PrismaReportRepository } from './PrismaReportRepository';

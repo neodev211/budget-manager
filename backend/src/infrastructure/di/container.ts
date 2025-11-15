@@ -6,11 +6,13 @@ import { TYPES } from './types';
 import { ICategoryRepository } from '../../domain/repositories/ICategoryRepository';
 import { IExpenseRepository } from '../../domain/repositories/IExpenseRepository';
 import { IProvisionRepository } from '../../domain/repositories/IProvisionRepository';
+import { IReportRepository } from '../../domain/repositories/IReportRepository';
 
 // ===== Repository Implementations (Prisma) =====
 import { PrismaCategoryRepository } from '../persistence/prisma/repositories/PrismaCategoryRepository';
 import { PrismaExpenseRepository } from '../persistence/prisma/repositories/PrismaExpenseRepository';
 import { PrismaProvisionRepository } from '../persistence/prisma/repositories/PrismaProvisionRepository';
+import { PrismaReportRepository } from '../persistence/prisma/repositories/PrismaReportRepository';
 
 // ===== Category Use Cases =====
 import {
@@ -141,6 +143,7 @@ export class DIContainer {
   private static categoryRepository: ICategoryRepository | null = null;
   private static expenseRepository: IExpenseRepository | null = null;
   private static provisionRepository: IProvisionRepository | null = null;
+  private static reportRepository: IReportRepository | null = null;
 
   /**
    * Get the singleton category repository (Prisma implementation)
@@ -191,6 +194,23 @@ export class DIContainer {
    */
   static getProvisionRepositoryInstance(): IProvisionRepository {
     return DIContainer.getProvisionRepository();
+  }
+
+  /**
+   * Get the singleton report repository (Prisma implementation)
+   */
+  private static getReportRepository(): IReportRepository {
+    if (!DIContainer.reportRepository) {
+      DIContainer.reportRepository = new PrismaReportRepository();
+    }
+    return DIContainer.reportRepository;
+  }
+
+  /**
+   * Get the report repository directly (for internal use in controllers)
+   */
+  static getReportRepositoryInstance(): IReportRepository {
+    return DIContainer.getReportRepository();
   }
 
   /**
