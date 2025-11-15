@@ -1,24 +1,30 @@
 version: '3.8'
 
 services:
-  db:
-    image: postgres:16-alpine
-    container_name: budget_db
-    restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: budget_management
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  # ============================================================
+  # DATABASE SERVICE (Optional - Only uncomment for local development)
+  # ============================================================
+  # db:
+  #   image: postgres:16-alpine
+  #   container_name: budget_db
+  #   restart: always
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #     POSTGRES_DB: budget_management
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U postgres"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
 
+  # ============================================================
+  # BACKEND SERVICE - Connected to Supabase
+  # ============================================================
   backend:
     build:
       context: ./backend
@@ -28,17 +34,23 @@ services:
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: "postgresql://postgres:postgres@db:5432/budget_management?schema=public"
+      # Supabase configuration (from .env file)
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@db:5432/budget_management?schema=public}
+      DIRECT_URL: ${DIRECT_URL:-postgresql://postgres:postgres@db:5432/budget_management?schema=public}
       PORT: 3000
-      NODE_ENV: development
+      NODE_ENV: ${NODE_ENV:-development}
     volumes:
       - ./backend:/app
       - /app/node_modules
-    depends_on:
-      db:
-        condition: service_healthy
-    command: sh -c "npx prisma migrate deploy && npm run dev"
+    # No longer depends on local db service
+    # depends_on:
+    #   db:
+    #     condition: service_healthy
+    command: sh -c "npm run dev"
 
+  # ============================================================
+  # FRONTEND SERVICE
+  # ============================================================
   frontend:
     build:
       context: ./frontend
@@ -53,5 +65,8 @@ services:
     depends_on:
       - backend
 
-volumes:
-  postgres_data:
+# ============================================================
+# VOLUMES (only needed if using local PostgreSQL)
+# ============================================================
+# volumes:
+#   postgres_data:
