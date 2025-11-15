@@ -1,0 +1,348 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                                                                           ║
+║        🏗️  CLEAN ARCHITECTURE REFACTORING PLAN - BUDGET MANAGER 🏗️      ║
+║                                                                           ║
+║                        Opción 1: Implementación Gradual                  ║
+║                                                                           ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+
+📊 ESTADO ACTUAL DEL PROYECTO
+═══════════════════════════════════════════════════════════════════════════
+
+✅ Backend corriendo en Docker
+✅ Frontend corriendo en Docker
+✅ Base de datos: Supabase Cloud
+✅ API funcionando correctamente
+✅ Tests pasando
+
+⚠️  PROBLEMA ACTUAL
+───────────────────────────────────────────────────────────────────────────
+  → Código acoplado a Prisma
+  → Cambiar ORM requiere reescribir TODO
+  → Difícil de testear
+  → Lógica esparcida en controllers
+
+
+🎯 OBJETIVO DEL REFACTORING
+═══════════════════════════════════════════════════════════════════════════
+
+Transformar la arquitectura de:
+
+    ❌ Controllers → Repositories → Prisma
+
+a:
+
+    ✅ Controllers → Use Cases → Repositories → Prisma/TypeORM/Etc
+
+
+📈 BENEFICIOS ESPERADOS
+═══════════════════════════════════════════════════════════════════════════
+
+✓ Desacoplamiento de ORM (Cambiar Prisma a TypeORM en 1 día)
+✓ Testabilidad (Tests sin BD real)
+✓ Mantenibilidad (Cambios localizados)
+✓ Reutilización (Use cases reutilizables)
+✓ Escalabilidad (Fácil agregar nuevas funcionalidades)
+
+
+📋 PLAN DE 7 FASES
+═══════════════════════════════════════════════════════════════════════════
+
+FASE 1: Fundamentos - Value Objects
+────────────────────────────────────
+  ⏱️  Tiempo: 2-3 horas
+  📁 Archivos: Money.ts, Period.ts
+  ✅ Status: Plan detallado disponible (FASE_1_PLAN.md)
+  📌 Importancia: CRÍTICA - Base del refactoring
+
+  Tareas:
+  □ Crear Money value object
+  □ Crear Period value object
+  □ Crear tests para ambos
+  □ Verificar que todo funciona
+  □ Hacer commit
+
+
+FASE 2: Data Mappers
+────────────────────────────────────
+  ⏱️  Tiempo: 2-3 horas
+  📁 Archivos: CategoryMapper.ts, ExpenseMapper.ts, ProvisionMapper.ts
+  ✅ Status: Plan en preparación (FASE_2_PLAN.md próximamente)
+  📌 Importancia: CRÍTICA - Aislación de Prisma
+
+  Tareas:
+  □ Crear CategoryMapper
+  □ Crear ExpenseMapper
+  □ Crear ProvisionMapper
+  □ Actualizar repositorios para usar mappers
+  □ Tests de mappers
+  □ Hacer commit
+
+
+FASE 3: Use Cases - Application Layer
+────────────────────────────────────
+  ⏱️  Tiempo: 3-4 horas
+  📁 Archivos: CreateCategoryUseCase.ts, GetCategoriesUseCase.ts, etc.
+  ✅ Status: Ejemplos en REFACTORING_PLAN.md
+  📌 Importancia: CRÍTICA - Lógica centralizada
+
+  Tareas:
+  □ Crear use cases para Category
+  □ Crear use cases para Expense
+  □ Crear use cases para Provision
+  □ Crear DTOs
+  □ Tests de use cases
+  □ Hacer commit
+
+
+FASE 4: Dependency Injection Container
+────────────────────────────────────
+  ⏱️  Tiempo: 2-3 horas
+  📁 Archivos: container.ts, types.ts
+  ✅ Status: Ejemplo completo en REFACTORING_PLAN.md
+  📌 Importancia: ALTA - Corazón del desacople
+
+  Tareas:
+  □ Instalar inversify + reflect-metadata
+  □ Crear container.ts
+  □ Crear types.ts
+  □ Registrar todos los servicios
+  □ Tests de DI
+  □ Hacer commit
+
+
+FASE 5: Controllers Refactorizados
+────────────────────────────────────
+  ⏱️  Tiempo: 3-4 horas
+  📁 Archivos: CategoryController.ts, ExpenseController.ts, etc.
+  ✅ Status: Ejemplos en REFACTORING_PLAN.md
+  📌 Importancia: CRÍTICA - Integración final
+
+  Tareas:
+  □ Refactorizar CategoryController
+  □ Refactorizar ExpenseController
+  □ Refactorizar ProvisionController
+  □ Actualizar rutas
+  □ Tests de controllers
+  □ Hacer commit
+
+
+FASE 6: Complementos - Expense y Provision
+────────────────────────────────────
+  ⏱️  Tiempo: 2-3 horas
+  📁 Archivos: Similar a Category pero para Expense y Provision
+  ✅ Status: Patrón establecido, repetible
+  📌 Importancia: MEDIA - Aplicación del patrón
+
+  Tareas:
+  □ Completar use cases para Expense
+  □ Completar use cases para Provision
+  □ Completar mappers si falta
+  □ Verificación integral
+  □ Hacer commit
+
+
+FASE 7: Testing - Unit & Integration
+────────────────────────────────────
+  ⏱️  Tiempo: 3-4 horas
+  📁 Archivos: InMemoryRepositories, tests unitarios
+  ✅ Status: Ejemplos en REFACTORING_PLAN.md
+  📌 Importancia: ALTA - Calidad de código
+
+  Tareas:
+  □ Crear In-Memory repositories
+  □ Tests unitarios de use cases
+  □ Tests de integración
+  □ Coverage > 80%
+  □ Documentación de tests
+  □ Hacer commit
+
+
+📅 TIMELINE ESTIMADO
+═══════════════════════════════════════════════════════════════════════════
+
+SEMANA 1:
+  Lunes:      Fase 1 + Fase 2 (4-6 horas)
+  Martes:     Fase 3 + Fase 4 (6-8 horas)
+  Miércoles:  Fase 5 + Testing (6-8 horas)
+
+SEMANA 2:
+  Jueves:     Expense + Provision (6-8 horas)
+  Viernes:    Ajustes y refinamientos (4-6 horas)
+
+TOTAL: 30-40 horas (part-time, sin presión)
+
+
+💰 ROI (Retorno de Inversión)
+═══════════════════════════════════════════════════════════════════════════
+
+ANTES (Sin refactoring):
+  └─ Cambiar Prisma → TypeORM: 2 semanas
+  └─ Testabilidad: Media
+  └─ Mantenibilidad: Baja
+
+DESPUÉS (Con refactoring):
+  └─ Cambiar Prisma → TypeORM: 1 día ⚡
+  └─ Testabilidad: Alta
+  └─ Mantenibilidad: Alta
+
+
+📁 ESTRUCTURA DE ARCHIVOS A CREAR
+═══════════════════════════════════════════════════════════════════════════
+
+backend/src/
+├── domain/
+│   └── value-objects/               ← FASE 1
+│       ├── Money.ts
+│       ├── Period.ts
+│       └── index.ts
+│
+├── application/                      ← FASE 3
+│   ├── use-cases/
+│   │   ├── categories/
+│   │   ├── expenses/
+│   │   └── provisions/
+│   ├── dto/
+│   └── ports/
+│
+└── infrastructure/
+    ├── persistence/prisma/mappers/  ← FASE 2
+    │   ├── CategoryMapper.ts
+    │   ├── ExpenseMapper.ts
+    │   └── ProvisionMapper.ts
+    │
+    ├── di/                           ← FASE 4
+    │   ├── container.ts
+    │   └── types.ts
+    │
+    ├── persistence/in-memory/        ← FASE 7
+    │   ├── InMemoryCategoryRepository.ts
+    │   └── ...
+
+
+🚀 CÓMO EMPEZAR
+═══════════════════════════════════════════════════════════════════════════
+
+PASO 1: Leer documentación (45 minutos)
+  └─ Lee: ARCHITECTURE_DOCS.md
+  └─ Lee: REFACTORING_SUMMARY.md
+  └─ Lee: REFACTORING_PLAN.md
+
+PASO 2: Prepararse (15 minutos)
+  └─ Abre editor de código
+  └─ Abre terminal
+  └─ Ten FASE_1_PLAN.md a mano
+
+PASO 3: Comenzar Fase 1 (2-3 horas)
+  └─ Sigue FASE_1_PLAN.md paso a paso
+  └─ Crea Money.ts
+  └─ Crea Period.ts
+  └─ Crea tests
+  └─ Verifica que pase: npm test
+  └─ Haz commit
+
+PASO 4: Continuar (Después Fase 1)
+  └─ Pasa a Fase 2
+  └─ Sigue el mismo patrón
+  └─ Un commit por fase
+  └─ Tests después de cada implementación
+
+
+✅ CHECKLIST RÁPIDO
+═══════════════════════════════════════════════════════════════════════════
+
+Antes de comenzar:
+  □ Leí REFACTORING_SUMMARY.md
+  □ Leí REFACTORING_PLAN.md
+  □ Entiendo el objetivo general
+  □ Tengo 1-2 semanas disponibles
+  □ Estoy preparado para cambios graduales
+
+Comenzar Fase 1:
+  □ Sigo FASE_1_PLAN.md
+  □ Creo Money.ts
+  □ Creo Period.ts
+  □ Creo tests
+  □ Verifico que pase: npm test
+  □ Hago commit
+
+Después de cada fase:
+  □ Todo funciona como antes
+  □ Tests pasan
+  □ Código más limpio
+  □ Commit realizado
+
+
+📚 DOCUMENTACIÓN DISPONIBLE
+═══════════════════════════════════════════════════════════════════════════
+
+✅ ARCHITECTURE_DOCS.md
+   └─ Índice centralizado de toda la documentación
+   └─ Preguntas frecuentes
+   └─ Timeline detallado
+
+✅ REFACTORING_SUMMARY.md
+   └─ Resumen ejecutivo (15 minutos de lectura)
+   └─ Comparación antes/después
+   └─ ROI y beneficios
+   └─ Checklist rápido
+
+✅ REFACTORING_PLAN.md
+   └─ Plan detallado con código (45 minutos de lectura)
+   └─ 7 fases completas
+   └─ Ejemplos de implementación
+   └─ Estructura de archivos
+
+✅ FASE_1_PLAN.md
+   └─ Guía paso a paso para Fase 1
+   └─ Implementación de Money.ts
+   └─ Implementación de Period.ts
+   └─ Tests completos
+   └─ Checklist de tareas
+
+
+❓ PREGUNTAS FRECUENTES
+═══════════════════════════════════════════════════════════════════════════
+
+P: ¿Se rompe algo durante el refactoring?
+R: No. Cada fase es independiente. El código existente sigue funcionando.
+
+P: ¿Puedo parar en el medio?
+R: Sí. Cada fase es optional. Parar después de Fase 2 te da mappers.
+
+P: ¿Cuánto tiempo toma?
+R: 1-2 semanas part-time (30-40 horas). Flexible según disponibilidad.
+
+P: ¿Necesito cambiar Supabase?
+R: No. El refactoring es interno. Supabase sigue igual.
+
+P: ¿Cómo cambio de ORM después?
+R: Creas nueva implementación de Repository, cambias 1 línea en container.
+
+
+🎯 OBJETIVO FINAL
+═══════════════════════════════════════════════════════════════════════════
+
+Código desacoplado, testeable, y listo para cualquier cambio futuro.
+
+Before:  Controllers → Repositories → Prisma ❌
+After:   Controllers ← Use Cases ← Repositories ← Prisma/TypeORM/Etc ✅
+
+
+🚀 SIGUIENTES PASOS
+═══════════════════════════════════════════════════════════════════════════
+
+1. Lee ARCHITECTURE_DOCS.md (5 minutos)
+2. Lee REFACTORING_SUMMARY.md (15 minutos)
+3. Decide si procedes o esperas
+4. Si procedes: lee FASE_1_PLAN.md y comienza a codificar
+
+¿Listo para transformar tu arquitectura? 🚀
+
+
+═══════════════════════════════════════════════════════════════════════════
+Documentación creada: 2025-11-15
+Plan actualizado: 2025-11-15
+Status: ✅ LISTO PARA COMENZAR
+═══════════════════════════════════════════════════════════════════════════
