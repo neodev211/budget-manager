@@ -5,6 +5,15 @@ services:
   # FRONTEND WITH KOYEB BACKEND
   # ============================================================
   frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: "https://squealing-kip-home-ai-67b1e978.koyeb.app/api"
+    container_name: budget_frontend
+    restart: always
+    ports:
+      - "3001:3001"
     environment:
       NEXT_PUBLIC_API_URL: "https://squealing-kip-home-ai-67b1e978.koyeb.app/api"
       NODE_ENV: production
