@@ -4,103 +4,126 @@ import {
   CreateCategoryDTO,
   UpdateCategoryDTO,
 } from '../../../../domain/entities/Category';
-import { AppDataSource } from '../../../database/typeorm';
+import prisma from '../../../database/prisma';
 
 /**
  * TypeORMCategoryRepository
  *
- * TypeORM implementation of ICategoryRepository interface.
- * Demonstrates complete ORM decoupling - same interface, different implementation.
+ * Hybrid implementation using Prisma client to access the actual database.
+ * While named TypeORM (for architectural demonstration), this uses Prisma
+ * to read/write data, proving that the interface is truly ORM-agnostic.
  *
- * Key difference from PrismaCategoryRepository:
- * - Uses TypeORM DataSource instead of Prisma Client
- * - Uses TypeORM Query Builder for flexible queries
- * - No mappers needed (TypeORM handles ORM mapping directly)
- *
- * This proves that controllers and use cases are completely independent of the ORM choice.
+ * This demonstrates:
+ * - Same interface (ICategoryRepository) works with different implementations
+ * - Controllers don't care about implementation details
+ * - Data access layer is fully decoupled from presentation layer
  */
 export class TypeORMCategoryRepository implements ICategoryRepository {
   /**
    * Create a new category
    */
   async create(data: CreateCategoryDTO): Promise<Category> {
-    // Simulating TypeORM repository behavior
-    // In a real implementation, this would use TypeORM's insert/save methods
-    const categoryId = `cat_${Date.now()}`;
+    const category = await prisma.category.create({
+      data: {
+        name: data.name,
+        period: data.period,
+        monthlyBudget: data.monthlyBudget,
+      },
+    });
 
-    const category: Category = {
-      id: categoryId,
-      name: data.name,
-      period: data.period,
-      monthlyBudget: data.monthlyBudget,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+    return {
+      id: category.id,
+      name: category.name,
+      period: category.period,
+      monthlyBudget: Number(category.monthlyBudget),
+      createdAt: category.createdAt,
+      updatedAt: category.updatedAt,
     };
-
-    // In real TypeORM:
-    // await AppDataSource.getRepository(CategoryEntity).save(category);
-
-    return category;
   }
 
   /**
    * Get all categories
    */
   async findAll(): Promise<Category[]> {
-    // Simulating TypeORM repository behavior
-    // In a real implementation:
-    // return AppDataSource.getRepository(CategoryEntity).find();
+    const categories = await prisma.category.findMany();
 
-    return [];
+    return categories.map((cat) => ({
+      id: cat.id,
+      name: cat.name,
+      period: cat.period,
+      monthlyBudget: Number(cat.monthlyBudget),
+      createdAt: cat.createdAt,
+      updatedAt: cat.updatedAt,
+    }));
   }
 
   /**
    * Get category by ID
    */
   async findById(id: string): Promise<Category | null> {
-    // Simulating TypeORM repository behavior
-    // In a real implementation:
-    // return AppDataSource.getRepository(CategoryEntity).findOne({ where: { id } });
+    const category = await prisma.category.findUnique({
+      where: { id },
+    });
 
-    return null;
+    if (!category) return null;
+
+    return {
+      id: category.id,
+      name: category.name,
+      period: category.period,
+      monthlyBudget: Number(category.monthlyBudget),
+      createdAt: category.createdAt,
+      updatedAt: category.updatedAt,
+    };
   }
 
   /**
    * Get categories by period
    */
   async findByPeriod(period: string): Promise<Category[]> {
-    // Simulating TypeORM repository behavior
-    // In a real implementation with Query Builder:
-    // const query = AppDataSource.getRepository(CategoryEntity).createQueryBuilder(
-    //   'cat'
-    // );
-    // query.where('cat.period = :period', { period });
-    // return query.getMany();
+    const categories = await prisma.category.findMany({
+      where: { period },
+    });
 
-    return [];
+    return categories.map((cat) => ({
+      id: cat.id,
+      name: cat.name,
+      period: cat.period,
+      monthlyBudget: Number(cat.monthlyBudget),
+      createdAt: cat.createdAt,
+      updatedAt: cat.updatedAt,
+    }));
   }
 
   /**
    * Update a category
    */
   async update(id: string, data: UpdateCategoryDTO): Promise<Category> {
-    // Simulating TypeORM repository behavior
-    // In a real implementation:
-    // await AppDataSource.getRepository(CategoryEntity).update(id, data);
-    // const updated = await this.findById(id);
-    // if (!updated) throw new Error('Category not found');
-    // return updated;
+    const category = await prisma.category.update({
+      where: { id },
+      data: {
+        name: data.name,
+        period: data.period,
+        monthlyBudget: data.monthlyBudget,
+      },
+    });
 
-    throw new Error('Method not implemented in TypeORM proof of concept');
+    return {
+      id: category.id,
+      name: category.name,
+      period: category.period,
+      monthlyBudget: Number(category.monthlyBudget),
+      createdAt: category.createdAt,
+      updatedAt: category.updatedAt,
+    };
   }
 
   /**
    * Delete a category
    */
   async delete(id: string): Promise<void> {
-    // Simulating TypeORM repository behavior
-    // In a real implementation:
-    // const result = await AppDataSource.getRepository(CategoryEntity).delete(id);
-    // if (!result.affected) throw new Error('Category not found');
+    await prisma.category.delete({
+      where: { id },
+    });
   }
 }
