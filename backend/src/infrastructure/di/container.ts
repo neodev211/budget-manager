@@ -16,6 +16,8 @@ import { PrismaReportRepository } from '../persistence/prisma/repositories/Prism
 
 // ===== Repository Implementations (TypeORM) =====
 import { TypeORMCategoryRepository } from '../persistence/typeorm/repositories/TypeORMCategoryRepository';
+import { TypeORMExpenseRepository } from '../persistence/typeorm/repositories/TypeORMExpenseRepository';
+import { TypeORMProvisionRepository } from '../persistence/typeorm/repositories/TypeORMProvisionRepository';
 
 // ===== Category Use Cases =====
 import {
@@ -77,6 +79,8 @@ export class DIContainer {
     DIContainer.currentORM = orm;
     // Reset repositories to force re-initialization with new ORM
     DIContainer.categoryRepository = null;
+    DIContainer.expenseRepository = null;
+    DIContainer.provisionRepository = null;
     console.log(`[DIContainer] Switched to ${orm} ORM`);
   }
 
@@ -187,21 +191,29 @@ export class DIContainer {
   }
 
   /**
-   * Get the singleton expense repository (Prisma implementation)
+   * Get the singleton expense repository (Prisma or TypeORM implementation)
    */
   private static getExpenseRepository(): IExpenseRepository {
     if (!DIContainer.expenseRepository) {
-      DIContainer.expenseRepository = new PrismaExpenseRepository();
+      if (DIContainer.currentORM === 'typeorm') {
+        DIContainer.expenseRepository = new TypeORMExpenseRepository();
+      } else {
+        DIContainer.expenseRepository = new PrismaExpenseRepository();
+      }
     }
     return DIContainer.expenseRepository;
   }
 
   /**
-   * Get the singleton provision repository (Prisma implementation)
+   * Get the singleton provision repository (Prisma or TypeORM implementation)
    */
   private static getProvisionRepository(): IProvisionRepository {
     if (!DIContainer.provisionRepository) {
-      DIContainer.provisionRepository = new PrismaProvisionRepository();
+      if (DIContainer.currentORM === 'typeorm') {
+        DIContainer.provisionRepository = new TypeORMProvisionRepository();
+      } else {
+        DIContainer.provisionRepository = new PrismaProvisionRepository();
+      }
     }
     return DIContainer.provisionRepository;
   }

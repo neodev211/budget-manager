@@ -12,3 +12,5 @@
  */
 
 export { TypeORMCategoryRepository } from './TypeORMCategoryRepository';
+export { TypeORMExpenseRepository } from './TypeORMExpenseRepository';
+export { TypeORMProvisionRepository } from './TypeORMProvisionRepository';
