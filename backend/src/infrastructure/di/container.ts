@@ -63,13 +63,13 @@ import {
  * - Centralized configuration
  *
  * ORM Support:
- * - Default: TypeORM (currently active)
- * - Alternative: Prisma (demonstrating ORM agnosticism)
+ * - Default: Prisma (currently active)
+ * - Alternative: TypeORM (demonstrating ORM agnosticism)
  * - Switch ORMs: Use setORM('prisma' | 'typeorm')
  */
 export class DIContainer {
   private static instance: Container;
-  private static currentORM: 'prisma' | 'typeorm' = 'typeorm';
+  private static currentORM: 'prisma' | 'typeorm' = 'prisma';
 
   /**
    * Set which ORM to use (Prisma or TypeORM)
