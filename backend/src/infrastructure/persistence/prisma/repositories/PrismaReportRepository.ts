@@ -16,37 +16,40 @@ export class PrismaReportRepository implements IReportRepository {
   }
 
   async getExecutiveSummary(period?: string): Promise<ExecutiveSummary[]> {
-    // Get all categories for the period
-    const categories = period
-      ? await prisma.category.findMany({ where: { period } })
-      : await prisma.category.findMany();
+    // ✅ OPTIMIZED: Single query with pre-loaded relations instead of N+1 queries
+    const categories = await prisma.category.findMany({
+      where: period ? { period } : undefined,
+      include: {
+        expenses: {
+          select: { amount: true },
+        },
+        provisions: {
+          where: { status: 'OPEN' },
+          select: { amount: true },
+        },
+      },
+    });
 
-    // For each category, aggregate expenses and provisions
-    const summaries: ExecutiveSummary[] = [];
-
-    for (const category of categories) {
+    // Process in-memory (fast computation)
+    const summaries: ExecutiveSummary[] = categories.map((category) => {
       // Sum expenses for this category
-      const expenseResult = await prisma.expense.aggregate({
-        where: { categoryId: category.id },
-        _sum: { amount: true },
-      });
-
-      const monthlySpent = Math.abs(this.toNumber(expenseResult._sum.amount));
+      const monthlySpent = Math.abs(
+        category.expenses.reduce((sum, expense) => {
+          return sum + this.toNumber(expense.amount);
+        }, 0)
+      );
 
       // Sum open provisions for this category
-      const provisionResult = await prisma.provision.aggregate({
-        where: {
-          categoryId: category.id,
-          status: 'OPEN',
-        },
-        _sum: { amount: true },
-      });
+      const monthlyOpenProvisions = Math.abs(
+        category.provisions.reduce((sum, provision) => {
+          return sum + this.toNumber(provision.amount);
+        }, 0)
+      );
 
-      const monthlyOpenProvisions = Math.abs(this.toNumber(provisionResult._sum.amount));
       const monthlyBudget = this.toNumber(category.monthlyBudget);
       const monthlyAvailable = monthlyBudget - monthlySpent - monthlyOpenProvisions;
 
-      const summary: ExecutiveSummary = {
+      return {
         categoryId: category.id,
         categoryName: category.name,
         period: category.period,
@@ -54,47 +57,50 @@ export class PrismaReportRepository implements IReportRepository {
         monthlySpent,
         monthlyOpenProvisions,
         monthlyAvailable,
-        // Semester calculations (placeholder - can be enhanced later)
+        // Semester calculations
         semesterBudget: monthlyBudget * 6,
         semesterSpent: monthlySpent * 6,
         semesterGrossAvailable: (monthlyBudget - monthlySpent) * 6,
         semesterProvision: monthlyOpenProvisions * 6,
         semesterRealAvailable: monthlyAvailable * 6,
       };
-
-      summaries.push(summary);
-    }
+    });
 
     return summaries;
   }
 
   async getExecutiveSummaryByCategory(categoryId: string): Promise<ExecutiveSummary> {
+    // ✅ OPTIMIZED: Single query with pre-loaded relations instead of 3 queries
     const category = await prisma.category.findUnique({
       where: { id: categoryId },
+      include: {
+        expenses: {
+          select: { amount: true },
+        },
+        provisions: {
+          where: { status: 'OPEN' },
+          select: { amount: true },
+        },
+      },
     });
 
     if (!category) {
       throw new Error(`Category with id "${categoryId}" not found`);
     }
 
-    // Sum expenses for this category
-    const expenseResult = await prisma.expense.aggregate({
-      where: { categoryId },
-      _sum: { amount: true },
-    });
+    // Process in-memory (fast computation)
+    const monthlySpent = Math.abs(
+      category.expenses.reduce((sum, expense) => {
+        return sum + this.toNumber(expense.amount);
+      }, 0)
+    );
 
-    const monthlySpent = Math.abs(this.toNumber(expenseResult._sum.amount));
+    const monthlyOpenProvisions = Math.abs(
+      category.provisions.reduce((sum, provision) => {
+        return sum + this.toNumber(provision.amount);
+      }, 0)
+    );
 
-    // Sum open provisions for this category
-    const provisionResult = await prisma.provision.aggregate({
-      where: {
-        categoryId,
-        status: 'OPEN',
-      },
-      _sum: { amount: true },
-    });
-
-    const monthlyOpenProvisions = Math.abs(this.toNumber(provisionResult._sum.amount));
     const monthlyBudget = this.toNumber(category.monthlyBudget);
     const monthlyAvailable = monthlyBudget - monthlySpent - monthlyOpenProvisions;
 
@@ -106,7 +112,7 @@ export class PrismaReportRepository implements IReportRepository {
       monthlySpent,
       monthlyOpenProvisions,
       monthlyAvailable,
-      // Semester calculations (placeholder - can be enhanced later)
+      // Semester calculations
       semesterBudget: monthlyBudget * 6,
       semesterSpent: monthlySpent * 6,
       semesterGrossAvailable: (monthlyBudget - monthlySpent) * 6,

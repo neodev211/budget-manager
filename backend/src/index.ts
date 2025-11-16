@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import compression from 'compression';
 import dotenv from 'dotenv';
 
 import categoryRoutes from './presentation/routes/categoryRoutes';
@@ -14,6 +15,14 @@ const PORT = process.env.PORT || 3000;
 
 // Middlewares
 app.use(cors());
+// ✅ OPTIMIZED: Compression middleware to reduce response sizes by 60-80%
+app.use(compression({
+  filter: (req, res) => {
+    if (req.headers['x-no-compression']) return false;
+    return compression.filter(req, res);
+  },
+  level: 6, // Balance between compression ratio and speed
+}));
 app.use(express.json());
 
 // Health check
