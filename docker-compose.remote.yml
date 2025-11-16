@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  # ============================================================
+  # FRONTEND WITH KOYEB BACKEND
+  # ============================================================
+  frontend:
+    environment:
+      NEXT_PUBLIC_API_URL: "https://squealing-kip-home-ai-67b1e978.koyeb.app/api"
+      NODE_ENV: production
