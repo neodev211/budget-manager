@@ -14,6 +14,9 @@ import { PrismaExpenseRepository } from '../persistence/prisma/repositories/Pris
 import { PrismaProvisionRepository } from '../persistence/prisma/repositories/PrismaProvisionRepository';
 import { PrismaReportRepository } from '../persistence/prisma/repositories/PrismaReportRepository';
 
+// ===== Repository Implementations (TypeORM) =====
+import { TypeORMCategoryRepository } from '../persistence/typeorm/repositories/TypeORMCategoryRepository';
+
 // ===== Category Use Cases =====
 import {
   CreateCategoryUseCase,
@@ -56,9 +59,33 @@ import {
  * - Easy swapping of implementations (e.g., Prisma → TypeORM)
  * - Testability via mock repositories
  * - Centralized configuration
+ *
+ * ORM Support:
+ * - Default: Prisma (production-ready)
+ * - Alternative: TypeORM (demonstrating ORM agnosticism)
+ * - Switch ORMs: Use setORM('prisma' | 'typeorm')
  */
 export class DIContainer {
   private static instance: Container;
+  private static currentORM: 'prisma' | 'typeorm' = 'prisma';
+
+  /**
+   * Set which ORM to use (Prisma or TypeORM)
+   * Note: Must be called before first repository instantiation
+   */
+  static setORM(orm: 'prisma' | 'typeorm'): void {
+    DIContainer.currentORM = orm;
+    // Reset repositories to force re-initialization with new ORM
+    DIContainer.categoryRepository = null;
+    console.log(`[DIContainer] Switched to ${orm} ORM`);
+  }
+
+  /**
+   * Get current ORM being used
+   */
+  static getORM(): 'prisma' | 'typeorm' {
+    return DIContainer.currentORM;
+  }
 
   /**
    * Get the singleton container instance
@@ -146,13 +173,17 @@ export class DIContainer {
   private static reportRepository: IReportRepository | null = null;
 
   /**
-   * Get the singleton category repository (Prisma implementation)
+   * Get the singleton category repository (Prisma or TypeORM implementation)
    */
   private static getCategoryRepository(): ICategoryRepository {
     if (!DIContainer.categoryRepository) {
-      DIContainer.categoryRepository = new PrismaCategoryRepository();
+      if (DIContainer.currentORM === 'typeorm') {
+        DIContainer.categoryRepository = new TypeORMCategoryRepository();
+      } else {
+        DIContainer.categoryRepository = new PrismaCategoryRepository();
+      }
     }
-    return DIContainer.categoryRepository;
+    return DIContainer.categoryRepository as ICategoryRepository;
   }
 
   /**
