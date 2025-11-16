@@ -33,7 +33,9 @@ export class CreateProvisionUseCase {
     }
 
     // Validar value objects
-    const money = new Money(input.amount);
+    // Convert positive input to negative (reserved debit)
+    const amountAsDebit = input.amount > 0 ? -input.amount : input.amount;
+    const money = new Money(amountAsDebit);
     if (!money.isNegative()) {
       throw new Error('Provision amount must be negative (a reserved debit)');
     }
