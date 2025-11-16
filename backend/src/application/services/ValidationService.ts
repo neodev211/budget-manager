@@ -136,9 +136,18 @@ export class ValidationService {
 
   /**
    * Validar que una fecha sea válida
+   * Acepta tanto objetos Date como strings ISO 8601
    */
-  static validateDate(date: Date, fieldName: string): void {
-    if (!(date instanceof Date) || isNaN(date.getTime())) {
+  static validateDate(date: Date | string, fieldName: string): void {
+    let dateObj: Date;
+
+    if (typeof date === 'string') {
+      dateObj = new Date(date);
+    } else {
+      dateObj = date;
+    }
+
+    if (!(dateObj instanceof Date) || isNaN(dateObj.getTime())) {
       throw new ValidationError(
         `${fieldName} must be a valid date`,
         fieldName,
@@ -149,10 +158,19 @@ export class ValidationService {
 
   /**
    * Validar que una fecha no sea en el futuro
+   * Acepta tanto objetos Date como strings ISO 8601
    */
-  static validateNotFutureDate(date: Date, fieldName: string): void {
-    this.validateDate(date, fieldName);
-    if (date > new Date()) {
+  static validateNotFutureDate(date: Date | string, fieldName: string): void {
+    let dateObj: Date;
+
+    if (typeof date === 'string') {
+      dateObj = new Date(date);
+    } else {
+      dateObj = date;
+    }
+
+    this.validateDate(dateObj, fieldName);
+    if (dateObj > new Date()) {
       throw new ValidationError(
         `${fieldName} cannot be in the future`,
         fieldName,

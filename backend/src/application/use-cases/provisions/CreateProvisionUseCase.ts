@@ -23,8 +23,19 @@ export class CreateProvisionUseCase {
   ) {}
 
   async execute(input: CreateProvisionDTO): Promise<Provision> {
-    // Validar entrada
-    this.validateInput(input);
+    // Convert dueDate string to Date object if needed
+    let dueDateAsDate: Date;
+    if (typeof input.dueDate === 'string') {
+      dueDateAsDate = new Date(input.dueDate);
+    } else {
+      dueDateAsDate = input.dueDate as Date;
+    }
+
+    // Validar entrada con fecha convertida
+    this.validateInput({
+      ...input,
+      dueDate: dueDateAsDate
+    });
 
     // Verificar que la categoría existe
     const category = await this.categoryRepository.findById(input.categoryId);
@@ -45,7 +56,7 @@ export class CreateProvisionUseCase {
       item: input.item.trim(),
       categoryId: input.categoryId,
       amount: money.value,
-      dueDate: input.dueDate,
+      dueDate: dueDateAsDate,
       notes: input.notes?.trim(),
     });
 

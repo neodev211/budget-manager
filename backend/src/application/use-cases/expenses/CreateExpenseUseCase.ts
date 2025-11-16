@@ -24,8 +24,19 @@ export class CreateExpenseUseCase {
   ) {}
 
   async execute(input: CreateExpenseDTO): Promise<Expense> {
-    // Validar entrada
-    this.validateInput(input);
+    // Convert date string to Date object if needed
+    let dateAsDate: Date;
+    if (typeof input.date === 'string') {
+      dateAsDate = new Date(input.date);
+    } else {
+      dateAsDate = input.date as Date;
+    }
+
+    // Validar entrada con fecha convertida
+    this.validateInput({
+      ...input,
+      date: dateAsDate
+    });
 
     // Verificar que la categoría existe
     const category = await this.categoryRepository.findById(input.categoryId);
@@ -46,7 +57,7 @@ export class CreateExpenseUseCase {
 
     // Crear gasto
     const expense = await this.expenseRepository.create({
-      date: input.date,
+      date: dateAsDate,
       description: input.description.trim(),
       categoryId: input.categoryId,
       provisionId: input.provisionId,
