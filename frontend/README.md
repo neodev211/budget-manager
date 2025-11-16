@@ -1,36 +1,152 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Budget Manager Frontend
 
-## Getting Started
+Frontend de la aplicación Budget Manager construido con Next.js 16, React 19 y Tailwind CSS.
 
-First, run the development server:
+## 🚀 Inicio Rápido
+
+### Opción 1: Backend Local (Desarrollo Normal)
 
 ```bash
+cd frontend
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+El frontend se conectará automáticamente a `http://localhost:3000/api` (backend local).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**URL:** http://localhost:3001
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+### Opción 2: Backend Koyeb (Probar contra Producción)
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+cd frontend
+npm run dev:remote
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+El frontend se conectará a `https://squealing-kip-home-ai-67b1e978.koyeb.app/api` (backend en Koyeb).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**URL:** http://localhost:3001
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Opción 3: Volver a Backend Local
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+cd frontend
+npm run dev:local
+```
+
+---
+
+## 🔧 Configuración
+
+El frontend usa variables de entorno para configurar la URL del backend.
+
+### Archivos de Configuración
+
+- **`.env.local`** - Configuración activa (ignorado por git)
+- **`.env.example`** - Template de ejemplo
+- **`.env.koyeb`** - Configuración para backend Koyeb (en git)
+
+### Cambiar Backend Manualmente
+
+Si prefieres cambiar manualmente:
+
+```bash
+# Para usar backend en Koyeb:
+cp .env.koyeb .env.local
+
+# Para usar backend local:
+echo "NEXT_PUBLIC_API_URL=http://localhost:3000/api" > .env.local
+```
+
+---
+
+## 📦 Scripts Disponibles
+
+```bash
+npm run dev          # Desarrollo con backend configurado en .env.local
+npm run dev:remote   # Desarrollo con backend Koyeb
+npm run dev:local    # Desarrollo con backend local
+npm run build        # Build de producción
+npm run start        # Servidor de producción (puerto 3001)
+npm run lint         # Linter
+```
+
+---
+
+## 🌐 URLs por Defecto
+
+- **Frontend:** http://localhost:3001
+- **Backend Local:** http://localhost:3000
+- **Backend Koyeb:** https://squealing-kip-home-ai-67b1e978.koyeb.app
+
+---
+
+## 🛠️ Tecnologías
+
+- **Framework:** Next.js 16 (App Router)
+- **UI Library:** React 19
+- **Lenguaje:** TypeScript 5
+- **Estilos:** Tailwind CSS 4
+- **HTTP Client:** Axios
+- **Iconos:** Lucide React
+- **Utilidades de Fecha:** date-fns
+
+---
+
+## 📂 Estructura
+
+```
+frontend/
+├── app/                  # Next.js App Router
+│   ├── categories/      # Página de categorías
+│   ├── expenses/        # Página de gastos
+│   ├── provisions/      # Página de provisiones
+│   ├── layout.tsx       # Layout principal
+│   └── page.tsx         # Dashboard
+├── components/          # Componentes reutilizables
+│   └── ui/             # Componentes UI base
+├── lib/                # Utilidades y configuración
+│   ├── api.ts          # Cliente Axios configurado
+│   └── utils.ts        # Funciones auxiliares
+├── services/           # Servicios de API
+│   ├── categoryService.ts
+│   ├── expenseService.ts
+│   ├── provisionService.ts
+│   └── reportService.ts
+└── types/              # Definiciones TypeScript
+    └── index.ts        # Tipos del dominio
+```
+
+---
+
+## 🔄 Flujo de Trabajo Recomendado
+
+1. **Desarrollo Local:**
+   ```bash
+   # Terminal 1: Backend
+   cd backend
+   npm run dev
+
+   # Terminal 2: Frontend
+   cd frontend
+   npm run dev:local
+   ```
+
+2. **Probar contra Koyeb:**
+   ```bash
+   # Solo frontend (backend ya está en Koyeb)
+   cd frontend
+   npm run dev:remote
+   ```
+
+---
+
+## 📝 Notas
+
+- El archivo `.env.local` es ignorado por git
+- Siempre revisa `.env.example` para ver las opciones disponibles
+- Los scripts `dev:remote` y `dev:local` crean/actualizan `.env.local` automáticamente

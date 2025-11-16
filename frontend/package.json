@@ -5,6 +5,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3001",
+    "dev:remote": "node -e \"require('fs').copyFileSync('.env.koyeb', '.env.local')\" && next dev -p 3001",
+    "dev:local": "node -e \"require('fs').writeFileSync('.env.local', 'NEXT_PUBLIC_API_URL=http://localhost:3000/api\\n')\" && next dev -p 3001",
     "build": "next build",
     "start": "next start -p 3001",
     "lint": "eslint"
