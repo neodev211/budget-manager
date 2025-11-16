@@ -206,21 +206,17 @@ export class ValidationService {
   }
 
   /**
-   * Validar regla de negocio: monto debe ser negativo (gasto)
+   * Validar regla de negocio: monto debe ser un número válido (positivo o negativo)
+   * El sistema automáticamente convierte valores positivos a negativos (débito)
    */
   static validateExpenseAmount(
     amount: number,
     fieldName: string = 'amount'
   ): void {
-    this.validateNonNegativeNumber(Math.abs(amount), fieldName);
-
-    if (amount > 0) {
-      throw new ValidationError(
-        `${fieldName} must be negative (representing a debit)`,
-        fieldName,
-        amount
-      );
-    }
+    // Accept both positive and negative values
+    // Positive values will be converted to negative in the use case
+    this.validatePositiveNumber(Math.abs(amount), fieldName);
+    this.validateTwoDecimals(Math.abs(amount), fieldName);
   }
 
   /**

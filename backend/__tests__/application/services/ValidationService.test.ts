@@ -169,12 +169,12 @@ describe('ValidationService', () => {
       expect(() => ValidationService.validateExpenseAmount(-100, 'amount')).not.toThrow();
     });
 
-    it('should throw for positive amount', () => {
-      expect(() => ValidationService.validateExpenseAmount(100, 'amount')).toThrow(ValidationError);
+    it('should pass for positive amount (will be converted to negative by use case)', () => {
+      expect(() => ValidationService.validateExpenseAmount(100, 'amount')).not.toThrow();
     });
 
-    it('should pass for zero (edge case)', () => {
-      expect(() => ValidationService.validateExpenseAmount(0, 'amount')).not.toThrow();
+    it('should throw for zero (must be greater than 0)', () => {
+      expect(() => ValidationService.validateExpenseAmount(0, 'amount')).toThrow(ValidationError);
     });
   });
 
