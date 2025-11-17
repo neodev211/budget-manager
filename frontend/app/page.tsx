@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
+import AlertBanner from '@/components/AlertBanner';
 import { reportService } from '@/services/reportService';
 import { ExecutiveSummary } from '@/types';
 import { formatCurrency } from '@/lib/utils';
@@ -59,6 +60,27 @@ export default function Dashboard() {
     );
   }
 
+  // Calcular categorías en riesgo
+  const overbudgetCategories = summaries
+    .filter((s) => s.monthlyAvailable < 0)
+    .map((s) => ({
+      categoryId: s.categoryId,
+      categoryName: s.categoryName,
+      available: s.monthlyAvailable,
+      budget: s.monthlyBudget,
+      isOverbudget: true,
+    }));
+
+  const warningCategories = summaries
+    .filter((s) => s.monthlyAvailable >= 0 && s.monthlyAvailable < s.monthlyBudget * 0.1)
+    .map((s) => ({
+      categoryId: s.categoryId,
+      categoryName: s.categoryName,
+      available: s.monthlyAvailable,
+      budget: s.monthlyBudget,
+      isOverbudget: false,
+    }));
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-start">
@@ -86,6 +108,12 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Alertas de Presupuesto */}
+      <AlertBanner
+        overbudgetCategories={overbudgetCategories}
+        warningCategories={warningCategories}
+      />
 
       {summaries.map((summary) => (
         <Card key={summary.categoryId}>

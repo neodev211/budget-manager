@@ -313,12 +313,64 @@ export default function ProvisionsPage() {
     filterDueDateTo !== '' ||
     filterItemName !== '';
 
-  // Agrupar provisiones por categoría y ordenar por categoría más reciente
+  // Calcular urgencia por due date
+  const getDueDateUrgency = (dueDate: string): 'overdue' | 'urgent' | 'warning' | 'normal' => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const due = new Date(dueDate);
+    due.setHours(0, 0, 0, 0);
+
+    const daysLeft = Math.floor((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (daysLeft < 0) return 'overdue';
+    if (daysLeft === 0 || daysLeft === 1) return 'urgent';
+    if (daysLeft <= 7) return 'warning';
+    return 'normal';
+  };
+
+  const getUrgencyColor = (urgency: 'overdue' | 'urgent' | 'warning' | 'normal') => {
+    switch (urgency) {
+      case 'overdue':
+        return 'bg-red-100 border-l-4 border-red-500';
+      case 'urgent':
+        return 'bg-red-50 border-l-4 border-red-400';
+      case 'warning':
+        return 'bg-amber-50 border-l-4 border-amber-400';
+      default:
+        return 'bg-white border-l-4 border-gray-300';
+    }
+  };
+
+  const getUrgencyBadge = (urgency: 'overdue' | 'urgent' | 'warning' | 'normal') => {
+    switch (urgency) {
+      case 'overdue':
+        return <span className="px-2 py-1 text-xs font-bold bg-red-600 text-white rounded">Vencida</span>;
+      case 'urgent':
+        return <span className="px-2 py-1 text-xs font-bold bg-red-500 text-white rounded">🔴 Hoy/Mañana</span>;
+      case 'warning':
+        return <span className="px-2 py-1 text-xs font-bold bg-amber-500 text-white rounded">🟠 Próxima</span>;
+      default:
+        return null;
+    }
+  };
+
+  // Agrupar provisiones por categoría y ordenar por urgencia (más urgentes primero)
   const groupedProvisions = categories.map(category => ({
     category,
     provisions: getFilteredProvisions()
       .filter(p => p.categoryId === category.id)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .sort((a, b) => {
+        // Primero por urgencia
+        const urgencyOrder = { overdue: 0, urgent: 1, warning: 2, normal: 3 };
+        const aUrgency = getDueDateUrgency(a.dueDate);
+        const bUrgency = getDueDateUrgency(b.dueDate);
+        const urgencyDiff = urgencyOrder[aUrgency] - urgencyOrder[bUrgency];
+        if (urgencyDiff !== 0) return urgencyDiff;
+
+        // Luego por fecha de vencimiento
+        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+      })
   })).filter(group => group.provisions.length > 0);
 
   const openProvisions = getFilteredProvisions().filter(p => p.status === ProvisionStatus.OPEN);
@@ -503,12 +555,13 @@ export default function ProvisionsPage() {
                   {catProvisions.map((provision) => {
                     const usedAmount = getUsedAmount(provision);
                     const remaining = Math.abs(provision.amount) - usedAmount;
+                    const urgency = getDueDateUrgency(provision.dueDate);
 
                     return (
-                      <div key={provision.id} className="border rounded-lg p-4">
+                      <div key={provision.id} className={`rounded-lg p-4 ${getUrgencyColor(urgency)}`}>
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <h3 className="font-semibold text-lg text-gray-900">
                                 {provision.item}
                               </h3>
@@ -519,6 +572,7 @@ export default function ProvisionsPage() {
                               }`}>
                                 {provision.status === ProvisionStatus.OPEN ? 'Abierta' : 'Cerrada'}
                               </span>
+                              {urgency !== 'normal' && getUrgencyBadge(urgency)}
                             </div>
 
                             <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
@@ -542,7 +596,12 @@ export default function ProvisionsPage() {
                               </div>
                             </div>
 
-                            <p className="text-sm text-gray-600 mt-2">
+                            <p className={`text-sm font-medium mt-2 ${
+                              urgency === 'overdue' ? 'text-red-700' :
+                              urgency === 'urgent' ? 'text-red-600' :
+                              urgency === 'warning' ? 'text-amber-600' :
+                              'text-gray-600'
+                            }`}>
                               Vence: {formatDate(provision.dueDate)}
                             </p>
                             {provision.notes && (

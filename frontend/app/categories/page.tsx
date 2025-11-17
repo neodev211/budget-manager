@@ -6,7 +6,10 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import FilterBar from '@/components/FilterBar';
+import StatusBadge from '@/components/StatusBadge';
 import { categoryService } from '@/services/categoryService';
+import { expenseService } from '@/services/expenseService';
+import { provisionService } from '@/services/provisionService';
 import { Category, CreateCategoryDTO } from '@/types';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Plus, Trash2, Edit2 } from 'lucide-react';
@@ -20,6 +23,8 @@ const getDefaultPeriod = () => {
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [expenses, setExpenses] = useState<any[]>([]);
+  const [provisions, setProvisions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -40,8 +45,14 @@ export default function CategoriesPage() {
   const loadCategories = async () => {
     try {
       setLoading(true);
-      const data = await categoryService.getAll();
-      setCategories(data);
+      const [categoriesData, expensesData, provisionsData] = await Promise.all([
+        categoryService.getAll(),
+        expenseService.getAll(),
+        provisionService.getAll(),
+      ]);
+      setCategories(categoriesData);
+      setExpenses(expensesData);
+      setProvisions(provisionsData);
     } catch (error) {
       console.error('Error loading categories:', error);
     } finally {
@@ -138,6 +149,22 @@ export default function CategoriesPage() {
   };
 
   const hasActiveFilters = filterPeriod !== '' || filterName !== '';
+
+  // Calcular presupuesto disponible por categoría
+  const getAvailableBudget = (categoryId: string) => {
+    const categoryExpenses = expenses.filter((e) => e.categoryId === categoryId);
+    const categoryProvisions = provisions.filter((p) => p.categoryId === categoryId);
+
+    const usedFromExpenses = categoryExpenses.reduce((sum, e) => sum + Math.abs(e.amount), 0);
+    const usedFromProvisions = categoryProvisions
+      .filter((p) => p.status === 'OPEN')
+      .reduce((sum, p) => sum + Math.abs(p.amount), 0);
+
+    const category = categories.find((c) => c.id === categoryId);
+    if (!category) return 0;
+
+    return category.monthlyBudget - usedFromExpenses - usedFromProvisions;
+  };
 
   return (
     <div className="space-y-6">
@@ -249,24 +276,20 @@ export default function CategoriesPage() {
           {getSortedCategories().map((category) => (
             <Card key={category.id}>
               <CardContent className="p-6">
-                <div className="flex justify-between items-start">
+                <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-lg text-gray-900">
-                      {category.name}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-lg text-gray-900">
+                        {category.name}
+                      </h3>
+                      <StatusBadge
+                        available={getAvailableBudget(category.id)}
+                        budget={category.monthlyBudget}
+                        size="sm"
+                      />
+                    </div>
                     <p className="text-sm text-gray-500 mt-1">
                       Período: {category.period}
-                    </p>
-                    <p className="text-2xl font-bold text-blue-600 mt-3">
-                      {formatCurrency(category.monthlyBudget)}
-                    </p>
-                    {category.notes && (
-                      <p className="text-sm text-gray-600 mt-2">
-                        {category.notes}
-                      </p>
-                    )}
-                    <p className="text-xs text-gray-400 mt-3">
-                      Creado: {formatDate(category.createdAt)}
                     </p>
                   </div>
                   <div className="flex gap-2 ml-4">
@@ -286,6 +309,32 @@ export default function CategoriesPage() {
                     </Button>
                   </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-3 mt-4">
+                  <div className="bg-blue-50 p-3 rounded">
+                    <p className="text-xs font-medium text-blue-600">Presupuesto</p>
+                    <p className="text-lg font-bold text-blue-900">
+                      {formatCurrency(category.monthlyBudget)}
+                    </p>
+                  </div>
+                  <div className={`p-3 rounded ${getAvailableBudget(category.id) < 0 ? 'bg-red-50' : 'bg-green-50'}`}>
+                    <p className={`text-xs font-medium ${getAvailableBudget(category.id) < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      Disponible
+                    </p>
+                    <p className={`text-lg font-bold ${getAvailableBudget(category.id) < 0 ? 'text-red-900' : 'text-green-900'}`}>
+                      {formatCurrency(getAvailableBudget(category.id))}
+                    </p>
+                  </div>
+                </div>
+
+                {category.notes && (
+                  <p className="text-sm text-gray-600 mt-3">
+                    {category.notes}
+                  </p>
+                )}
+                <p className="text-xs text-gray-400 mt-3">
+                  Creado: {formatDate(category.createdAt)}
+                </p>
               </CardContent>
             </Card>
           ))}
