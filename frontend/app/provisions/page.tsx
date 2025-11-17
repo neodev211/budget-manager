@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import Select from '@/components/ui/Select';
+import FilterBar from '@/components/FilterBar';
 import { provisionService } from '@/services/provisionService';
 import { categoryService } from '@/services/categoryService';
 import { Provision, CreateProvisionDTO, Category, ProvisionStatus } from '@/types';
@@ -20,6 +22,11 @@ export default function ProvisionsPage() {
   const [sourceCategoryId, setSourceCategoryId] = useState<string>('');
   const [targetCategoryId, setTargetCategoryId] = useState<string>('');
   const [selectedProvisionIds, setSelectedProvisionIds] = useState<Set<string>>(new Set());
+  const [filterCategoryId, setFilterCategoryId] = useState<string>('');
+  const [filterStatus, setFilterStatus] = useState<string>('ALL');
+  const [filterDueDateFrom, setFilterDueDateFrom] = useState<string>('');
+  const [filterDueDateTo, setFilterDueDateTo] = useState<string>('');
+  const [filterItemName, setFilterItemName] = useState<string>('');
 
   // Calcular fecha default: último día del mes siguiente
   const getDefaultDueDate = () => {
@@ -263,15 +270,58 @@ export default function ProvisionsPage() {
     return Math.abs(provision.usedAmount || 0);
   };
 
+  const getFilteredProvisions = () => {
+    let filtered = provisions;
+
+    if (filterCategoryId) {
+      filtered = filtered.filter((p) => p.categoryId === filterCategoryId);
+    }
+
+    if (filterStatus === 'OPEN' || filterStatus === 'CLOSED') {
+      filtered = filtered.filter((p) => p.status === filterStatus);
+    }
+
+    if (filterDueDateFrom) {
+      filtered = filtered.filter((p) => new Date(p.dueDate) >= new Date(filterDueDateFrom));
+    }
+
+    if (filterDueDateTo) {
+      filtered = filtered.filter((p) => new Date(p.dueDate) <= new Date(filterDueDateTo));
+    }
+
+    if (filterItemName) {
+      filtered = filtered.filter((p) =>
+        p.item.toLowerCase().includes(filterItemName.toLowerCase())
+      );
+    }
+
+    return filtered;
+  };
+
+  const handleClearFilters = () => {
+    setFilterCategoryId('');
+    setFilterStatus('ALL');
+    setFilterDueDateFrom('');
+    setFilterDueDateTo('');
+    setFilterItemName('');
+  };
+
+  const hasActiveFilters =
+    filterCategoryId !== '' ||
+    filterStatus !== 'ALL' ||
+    filterDueDateFrom !== '' ||
+    filterDueDateTo !== '' ||
+    filterItemName !== '';
+
   // Agrupar provisiones por categoría y ordenar por categoría más reciente
   const groupedProvisions = categories.map(category => ({
     category,
-    provisions: provisions
+    provisions: getFilteredProvisions()
       .filter(p => p.categoryId === category.id)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   })).filter(group => group.provisions.length > 0);
 
-  const openProvisions = provisions.filter(p => p.status === ProvisionStatus.OPEN);
+  const openProvisions = getFilteredProvisions().filter(p => p.status === ProvisionStatus.OPEN);
   const totalOpen = openProvisions.reduce((sum, p) => sum + Math.abs(p.amount), 0);
 
   return (
@@ -313,6 +363,46 @@ export default function ProvisionsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Filtros */}
+      {provisions.length > 0 && (
+        <FilterBar onClear={handleClearFilters} hasActiveFilters={hasActiveFilters}>
+          <Select
+            label="Categoría"
+            options={[{ value: '', label: 'Todas' }, ...categories.map((c) => ({ value: c.id, label: c.name }))]}
+            value={filterCategoryId}
+            onChange={(e) => setFilterCategoryId(e.target.value)}
+          />
+          <Select
+            label="Estado"
+            options={[
+              { value: 'ALL', label: 'Todos' },
+              { value: 'OPEN', label: 'Abierta' },
+              { value: 'CLOSED', label: 'Cerrada' }
+            ]}
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+          />
+          <Input
+            label="Vencimiento desde"
+            type="date"
+            value={filterDueDateFrom}
+            onChange={(e) => setFilterDueDateFrom(e.target.value)}
+          />
+          <Input
+            label="Vencimiento hasta"
+            type="date"
+            value={filterDueDateTo}
+            onChange={(e) => setFilterDueDateTo(e.target.value)}
+          />
+          <Input
+            label="Buscar por item"
+            placeholder="Ej: Donación..."
+            value={filterItemName}
+            onChange={(e) => setFilterItemName(e.target.value)}
+          />
+        </FilterBar>
+      )}
 
       {showForm && (
         <Card>

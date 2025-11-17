@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import Select from '@/components/ui/Select';
+import FilterBar from '@/components/FilterBar';
 import { expenseService } from '@/services/expenseService';
 import { categoryService } from '@/services/categoryService';
 import { provisionService } from '@/services/provisionService';
@@ -19,6 +21,11 @@ export default function ExpensesPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [filterDateFrom, setFilterDateFrom] = useState<string>('');
+  const [filterDateTo, setFilterDateTo] = useState<string>('');
+  const [filterCategoryId, setFilterCategoryId] = useState<string>('');
+  const [filterProvisionId, setFilterProvisionId] = useState<string>('');
+  const [filterDescription, setFilterDescription] = useState<string>('');
   const [formData, setFormData] = useState<CreateExpenseDTO>({
     date: new Date().toISOString().split('T')[0],
     description: '',
@@ -126,18 +133,6 @@ export default function ExpensesPage() {
   // Obtener estado actual de validación para mostrar en pantalla
   const currentValidation = validateExpenseAmount();
 
-  // Ordenar gastos
-  const getSortedExpenses = () => {
-    if (sortOrder === 'newest') {
-      return [...expenses].sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-      );
-    } else {
-      return [...expenses].sort(
-        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-      );
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -225,6 +220,66 @@ export default function ExpensesPage() {
 
   const totalExpenses = expenses.reduce((sum, exp) => sum + Math.abs(exp.amount), 0);
 
+  const getFilteredExpenses = () => {
+    let filtered = expenses;
+
+    if (filterDateFrom) {
+      filtered = filtered.filter((e) => new Date(e.date) >= new Date(filterDateFrom));
+    }
+
+    if (filterDateTo) {
+      filtered = filtered.filter((e) => new Date(e.date) <= new Date(filterDateTo));
+    }
+
+    if (filterCategoryId) {
+      filtered = filtered.filter((e) => e.categoryId === filterCategoryId);
+    }
+
+    if (filterProvisionId) {
+      filtered = filtered.filter((e) => e.provisionId === filterProvisionId);
+    }
+
+    if (filterDescription) {
+      filtered = filtered.filter((e) =>
+        e.description.toLowerCase().includes(filterDescription.toLowerCase())
+      );
+    }
+
+    return filtered;
+  };
+
+  const getSortedExpenses = () => {
+    const filtered = getFilteredExpenses();
+    if (sortOrder === 'newest') {
+      return [...filtered].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+    } else {
+      return [...filtered].sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
+    }
+  };
+
+  const handleClearFilters = () => {
+    setFilterDateFrom('');
+    setFilterDateTo('');
+    setFilterCategoryId('');
+    setFilterProvisionId('');
+    setFilterDescription('');
+  };
+
+  const hasActiveFilters =
+    filterDateFrom !== '' ||
+    filterDateTo !== '' ||
+    filterCategoryId !== '' ||
+    filterProvisionId !== '' ||
+    filterDescription !== '';
+
+  const getFilteredTotalExpenses = () => {
+    return getFilteredExpenses().reduce((sum, exp) => sum + Math.abs(exp.amount), 0);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -256,16 +311,52 @@ export default function ExpensesPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">
-                Total de Gastos
+                Total de Gastos {hasActiveFilters && `(${getSortedExpenses().length}/${expenses.length})`}
               </p>
               <p className="text-3xl font-bold text-red-600 mt-1">
-                {formatCurrency(totalExpenses)}
+                {formatCurrency(hasActiveFilters ? getFilteredTotalExpenses() : totalExpenses)}
               </p>
             </div>
             <Wallet className="h-12 w-12 text-red-400" />
           </div>
         </CardContent>
       </Card>
+
+      {/* Filtros */}
+      {expenses.length > 0 && (
+        <FilterBar onClear={handleClearFilters} hasActiveFilters={hasActiveFilters}>
+          <Input
+            label="Desde"
+            type="date"
+            value={filterDateFrom}
+            onChange={(e) => setFilterDateFrom(e.target.value)}
+          />
+          <Input
+            label="Hasta"
+            type="date"
+            value={filterDateTo}
+            onChange={(e) => setFilterDateTo(e.target.value)}
+          />
+          <Select
+            label="Categoría"
+            options={[{ value: '', label: 'Todas' }, ...categories.map((c) => ({ value: c.id, label: c.name }))]}
+            value={filterCategoryId}
+            onChange={(e) => setFilterCategoryId(e.target.value)}
+          />
+          <Select
+            label="Provisión"
+            options={[{ value: '', label: 'Todas' }, ...provisions.map((p) => ({ value: p.id, label: p.item }))]}
+            value={filterProvisionId}
+            onChange={(e) => setFilterProvisionId(e.target.value)}
+          />
+          <Input
+            label="Buscar descripción"
+            placeholder="Ej: Supermercado..."
+            value={filterDescription}
+            onChange={(e) => setFilterDescription(e.target.value)}
+          />
+        </FilterBar>
+      )}
 
       {/* Formulario Simple - Solo 3 campos */}
       {showForm && (
@@ -398,7 +489,7 @@ export default function ExpensesPage() {
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>Lista de Gastos ({expenses.length})</CardTitle>
+            <CardTitle>Lista de Gastos ({getSortedExpenses().length}/{expenses.length})</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">

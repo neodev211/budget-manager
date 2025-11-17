@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import Select from '@/components/ui/Select';
+import FilterBar from '@/components/FilterBar';
 import { categoryService } from '@/services/categoryService';
 import { Category, CreateCategoryDTO } from '@/types';
 import { formatCurrency, formatDate } from '@/lib/utils';
@@ -22,6 +24,8 @@ export default function CategoriesPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [filterPeriod, setFilterPeriod] = useState<string>('');
+  const [filterName, setFilterName] = useState<string>('');
   const [formData, setFormData] = useState<CreateCategoryDTO>({
     name: '',
     period: getDefaultPeriod(),
@@ -94,17 +98,46 @@ export default function CategoriesPage() {
     }
   };
 
+  const getUniquePeriods = () => {
+    const periods = [...new Set(categories.map((c) => c.period))].sort().reverse();
+    return periods.map((p) => ({ value: p, label: p }));
+  };
+
+  const getFilteredCategories = () => {
+    let filtered = categories;
+
+    if (filterPeriod) {
+      filtered = filtered.filter((c) => c.period === filterPeriod);
+    }
+
+    if (filterName) {
+      filtered = filtered.filter((c) =>
+        c.name.toLowerCase().includes(filterName.toLowerCase())
+      );
+    }
+
+    return filtered;
+  };
+
   const getSortedCategories = () => {
+    const filtered = getFilteredCategories();
     if (sortOrder === 'newest') {
-      return [...categories].sort(
+      return [...filtered].sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
     } else {
-      return [...categories].sort(
+      return [...filtered].sort(
         (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
     }
   };
+
+  const handleClearFilters = () => {
+    setFilterPeriod('');
+    setFilterName('');
+  };
+
+  const hasActiveFilters = filterPeriod !== '' || filterName !== '';
 
   return (
     <div className="space-y-6">
@@ -112,7 +145,7 @@ export default function CategoriesPage() {
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Categorías</h2>
           <p className="text-gray-600 mt-1">
-            Gestiona tus categorías de presupuesto ({categories.length})
+            Gestiona tus categorías de presupuesto ({getSortedCategories().length}/{categories.length})
           </p>
         </div>
         <div className="flex gap-2">
@@ -130,6 +163,23 @@ export default function CategoriesPage() {
           </Button>
         </div>
       </div>
+
+      {categories.length > 0 && (
+        <FilterBar onClear={handleClearFilters} hasActiveFilters={hasActiveFilters}>
+          <Select
+            label="Período"
+            options={[{ value: '', label: 'Todos los períodos' }, ...getUniquePeriods()]}
+            value={filterPeriod}
+            onChange={(e) => setFilterPeriod(e.target.value)}
+          />
+          <Input
+            label="Buscar por nombre"
+            placeholder="ej: Sueldo, Gastos..."
+            value={filterName}
+            onChange={(e) => setFilterName(e.target.value)}
+          />
+        </FilterBar>
+      )}
 
       {showForm && (
         <Card>
