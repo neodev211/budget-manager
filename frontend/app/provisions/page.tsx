@@ -314,6 +314,50 @@ export default function ProvisionsPage() {
     filterItemName !== '';
 
   // Calcular urgencia por due date
+  const getDueDateStatus = (dueDate: string): 'urgent' | 'soon' | 'normal' => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const due = new Date(dueDate);
+    due.setHours(0, 0, 0, 0);
+
+    const daysUntilDue = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (daysUntilDue < 0) return 'urgent'; // Vencida
+    if (daysUntilDue <= 7) return 'urgent'; // < 7 días
+    if (daysUntilDue <= 14) return 'soon'; // 7-14 días
+    return 'normal';
+  };
+
+  const getDueDateBadge = (dueDate: string) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const due = new Date(dueDate);
+    due.setHours(0, 0, 0, 0);
+
+    const daysUntilDue = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    const status = getDueDateStatus(dueDate);
+
+    if (status === 'urgent') {
+      return (
+        <span className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+          🔴 {daysUntilDue < 0 ? 'Vencida' : `Vence en ${daysUntilDue} día${daysUntilDue !== 1 ? 's' : ''}`}
+        </span>
+      );
+    }
+
+    if (status === 'soon') {
+      return (
+        <span className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">
+          🟡 Vence en {daysUntilDue} días
+        </span>
+      );
+    }
+
+    return null;
+  };
+
   const getDueDateUrgency = (dueDate: string): 'overdue' | 'urgent' | 'warning' | 'normal' => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -361,14 +405,19 @@ export default function ProvisionsPage() {
     provisions: getFilteredProvisions()
       .filter(p => p.categoryId === category.id)
       .sort((a, b) => {
-        // Primero por urgencia
-        const urgencyOrder = { overdue: 0, urgent: 1, warning: 2, normal: 3 };
-        const aUrgency = getDueDateUrgency(a.dueDate);
-        const bUrgency = getDueDateUrgency(b.dueDate);
-        const urgencyDiff = urgencyOrder[aUrgency] - urgencyOrder[bUrgency];
-        if (urgencyDiff !== 0) return urgencyDiff;
+        // Primero por estado (OPEN antes que CLOSED)
+        if (a.status !== b.status) {
+          return a.status === 'OPEN' ? -1 : 1;
+        }
 
-        // Luego por fecha de vencimiento
+        // Luego por urgencia
+        const statusOrder = { urgent: 0, soon: 1, normal: 2 };
+        const aStatus = getDueDateStatus(a.dueDate);
+        const bStatus = getDueDateStatus(b.dueDate);
+        const statusDiff = statusOrder[aStatus] - statusOrder[bStatus];
+        if (statusDiff !== 0) return statusDiff;
+
+        // Por último por fecha de vencimiento
         return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
       })
   })).filter(group => group.provisions.length > 0);
@@ -596,14 +645,17 @@ export default function ProvisionsPage() {
                               </div>
                             </div>
 
-                            <p className={`text-sm font-medium mt-2 ${
-                              urgency === 'overdue' ? 'text-red-700' :
-                              urgency === 'urgent' ? 'text-red-600' :
-                              urgency === 'warning' ? 'text-amber-600' :
-                              'text-gray-600'
-                            }`}>
-                              Vence: {formatDate(provision.dueDate)}
-                            </p>
+                            <div className="flex items-center gap-2 mt-2 flex-wrap">
+                              <p className={`text-sm font-medium ${
+                                urgency === 'overdue' ? 'text-red-700' :
+                                urgency === 'urgent' ? 'text-red-600' :
+                                urgency === 'warning' ? 'text-amber-600' :
+                                'text-gray-600'
+                              }`}>
+                                Vence: {formatDate(provision.dueDate)}
+                              </p>
+                              {getDueDateBadge(provision.dueDate)}
+                            </div>
                             {provision.notes && (
                               <p className="text-sm text-gray-500 mt-1">{provision.notes}</p>
                             )}

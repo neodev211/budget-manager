@@ -238,6 +238,44 @@ export default function ExpensesPage() {
     return labels[method || 'CASH'] || 'Desconocido';
   };
 
+  // Obtener advertencias para gastos que dejan poco presupuesto
+  const getExpenseWarnings = (): string[] => {
+    const warnings: string[] = [];
+    const amount = Math.abs(formData.amount);
+
+    if (!formData.categoryId || amount === 0) return warnings;
+
+    const categoryBalance = getCategoryBalance(formData.categoryId);
+    const remainingAfter = categoryBalance - amount;
+    const category = categories.find(c => c.id === formData.categoryId);
+
+    // Warning si queda < 10% del presupuesto de la categoría
+    if (remainingAfter >= 0 && category && remainingAfter < (category.monthlyBudget || 0) * 0.1) {
+      warnings.push(
+        `⚠️ Después de este gasto solo quedarán ${formatCurrency(remainingAfter)} disponibles (< 10% del presupuesto de ${category.name})`
+      );
+    }
+
+    // Warning similar para provisión
+    if (formData.provisionId) {
+      const provisionBalance = getProvisionBalance(formData.provisionId);
+      const provisionRemainingAfter = provisionBalance - amount;
+      const provision = provisions.find(p => p.id === formData.provisionId);
+
+      if (
+        provisionRemainingAfter >= 0 &&
+        provision &&
+        provisionRemainingAfter < Math.abs(provision.amount || 0) * 0.1
+      ) {
+        warnings.push(
+          `⚠️ Después de este gasto solo quedarán ${formatCurrency(provisionRemainingAfter)} en la provisión "${provision.item}" (< 10%)`
+        );
+      }
+    }
+
+    return warnings;
+  };
+
   // Filtrar provisiones abiertas de la categoría seleccionada
   const getAvailableProvisions = (categoryId: string): Provision[] => {
     return provisions.filter(p => p.categoryId === categoryId && p.status === ProvisionStatus.OPEN);
@@ -520,6 +558,17 @@ export default function ExpensesPage() {
                   <p className="text-sm font-medium text-green-800">
                     ✓ El gasto puede ser registrado
                   </p>
+                </div>
+              )}
+
+              {/* Warnings informativos para gastos que dejan poco presupuesto */}
+              {currentValidation.valid && getExpenseWarnings().length > 0 && (
+                <div className="bg-amber-50 p-3 rounded-md border border-amber-200">
+                  {getExpenseWarnings().map((warning, idx) => (
+                    <p key={idx} className="text-sm font-medium text-amber-800 mb-1">
+                      {warning}
+                    </p>
+                  ))}
                 </div>
               )}
 
