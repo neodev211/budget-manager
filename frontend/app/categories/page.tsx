@@ -7,7 +7,7 @@ import Input from '@/components/ui/Input';
 import { categoryService } from '@/services/categoryService';
 import { Category, CreateCategoryDTO } from '@/types';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Edit2 } from 'lucide-react';
 
 const getDefaultPeriod = () => {
   const today = new Date();
@@ -20,6 +20,7 @@ export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [formData, setFormData] = useState<CreateCategoryDTO>({
     name: '',
@@ -47,14 +48,39 @@ export default function CategoriesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await categoryService.create(formData);
+      if (editingId) {
+        // Update existing category
+        await categoryService.update(editingId, formData);
+        setEditingId(null);
+        alert('Categoría actualizada exitosamente');
+      } else {
+        // Create new category
+        await categoryService.create(formData);
+      }
       setFormData({ name: '', period: getDefaultPeriod(), monthlyBudget: 0, notes: '' });
       setShowForm(false);
       loadCategories();
     } catch (error) {
-      console.error('Error creating category:', error);
-      alert('Error al crear la categoría');
+      console.error('Error al guardar categoría:', error);
+      alert('Error al guardar la categoría');
     }
+  };
+
+  const handleEdit = (category: Category) => {
+    setEditingId(category.id);
+    setFormData({
+      name: category.name,
+      period: category.period,
+      monthlyBudget: category.monthlyBudget,
+      notes: category.notes || ''
+    });
+    setShowForm(true);
+  };
+
+  const handleCancel = () => {
+    setEditingId(null);
+    setFormData({ name: '', period: getDefaultPeriod(), monthlyBudget: 0, notes: '' });
+    setShowForm(false);
   };
 
   const handleDelete = async (id: string) => {
@@ -108,7 +134,7 @@ export default function CategoriesPage() {
       {showForm && (
         <Card>
           <CardHeader>
-            <CardTitle>Nueva Categoría</CardTitle>
+            <CardTitle>{editingId ? 'Editar Categoría' : 'Nueva Categoría'}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -144,8 +170,8 @@ export default function CategoriesPage() {
                 />
               </div>
               <div className="flex gap-2">
-                <Button type="submit">Guardar</Button>
-                <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>
+                <Button type="submit">{editingId ? 'Actualizar' : 'Guardar'}</Button>
+                <Button type="button" variant="secondary" onClick={handleCancel}>
                   Cancelar
                 </Button>
               </div>
@@ -189,13 +215,22 @@ export default function CategoriesPage() {
                       Creado: {formatDate(category.createdAt)}
                     </p>
                   </div>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => handleDelete(category.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  <div className="flex gap-2 ml-4">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleEdit(category)}
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => handleDelete(category.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

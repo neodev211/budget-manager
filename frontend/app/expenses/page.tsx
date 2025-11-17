@@ -9,7 +9,7 @@ import { categoryService } from '@/services/categoryService';
 import { provisionService } from '@/services/provisionService';
 import { Expense, CreateExpenseDTO, Category, Provision, ProvisionStatus } from '@/types';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { Plus, Trash2, Wallet } from 'lucide-react';
+import { Plus, Trash2, Edit2, Wallet } from 'lucide-react';
 
 export default function ExpensesPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -17,6 +17,7 @@ export default function ExpensesPage() {
   const [provisions, setProvisions] = useState<Provision[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [formData, setFormData] = useState<CreateExpenseDTO>({
     date: new Date().toISOString().split('T')[0],
@@ -149,7 +150,15 @@ export default function ExpensesPage() {
         amount: Math.abs(formData.amount) * -1 // Siempre negativo
       };
 
-      await expenseService.create(dataToSend);
+      if (editingId) {
+        // Update existing expense
+        await expenseService.update(editingId, dataToSend);
+        setEditingId(null);
+        alert('Gasto actualizado exitosamente');
+      } else {
+        // Create new expense
+        await expenseService.create(dataToSend);
+      }
       setFormData({
         date: new Date().toISOString().split('T')[0],
         description: '',
@@ -160,9 +169,33 @@ export default function ExpensesPage() {
       setShowForm(false);
       loadData();
     } catch (error) {
-      console.error('Error creating expense:', error);
-      alert('Error al registrar el gasto');
+      console.error('Error al guardar gasto:', error);
+      alert('Error al guardar el gasto');
     }
+  };
+
+  const handleEdit = (expense: Expense) => {
+    setEditingId(expense.id);
+    setFormData({
+      date: expense.date.split('T')[0],
+      description: expense.description,
+      categoryId: expense.categoryId,
+      amount: Math.abs(expense.amount),
+      provisionId: expense.provisionId
+    });
+    setShowForm(true);
+  };
+
+  const handleCancel = () => {
+    setEditingId(null);
+    setFormData({
+      date: new Date().toISOString().split('T')[0],
+      description: '',
+      categoryId: categories[0]?.id || '',
+      amount: 0,
+      provisionId: undefined
+    });
+    setShowForm(false);
   };
 
   const handleDelete = async (id: string) => {
@@ -238,7 +271,7 @@ export default function ExpensesPage() {
       {showForm && (
         <Card>
           <CardHeader>
-            <CardTitle>Registrar Gasto (3 campos obligatorios)</CardTitle>
+            <CardTitle>{editingId ? 'Editar Gasto' : 'Registrar Gasto (3 campos obligatorios)'}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -340,9 +373,9 @@ export default function ExpensesPage() {
                   type="submit"
                   disabled={!currentValidation.valid}
                 >
-                  Guardar Gasto
+                  {editingId ? 'Actualizar Gasto' : 'Guardar Gasto'}
                 </Button>
-                <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>
+                <Button type="button" variant="secondary" onClick={handleCancel}>
                   Cancelar
                 </Button>
               </div>
@@ -411,13 +444,22 @@ export default function ExpensesPage() {
                         {formatCurrency(Math.abs(expense.amount))}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={() => handleDelete(expense.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => handleEdit(expense)}
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => handleDelete(expense.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}

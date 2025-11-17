@@ -8,13 +8,14 @@ import { provisionService } from '@/services/provisionService';
 import { categoryService } from '@/services/categoryService';
 import { Provision, CreateProvisionDTO, Category, ProvisionStatus } from '@/types';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { Plus, Trash2, CheckCircle, Copy, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, CheckCircle, Copy, ChevronDown, Edit2 } from 'lucide-react';
 
 export default function ProvisionsPage() {
   const [provisions, setProvisions] = useState<Provision[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [showBulkCopyModal, setShowBulkCopyModal] = useState(false);
   const [sourceCategoryId, setSourceCategoryId] = useState<string>('');
   const [targetCategoryId, setTargetCategoryId] = useState<string>('');
@@ -79,8 +80,8 @@ export default function ProvisionsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validar que no exceda el presupuesto
-    if (!validateProvisionAmount(formData.categoryId, formData.amount)) {
+    // Validar que no exceda el presupuesto (solo cuando se crea una nueva)
+    if (!editingId && !validateProvisionAmount(formData.categoryId, formData.amount)) {
       const category = categories.find(c => c.id === formData.categoryId);
       alert(`La suma de provisiones no puede exceder el presupuesto de la categoría (${formatCurrency(category?.monthlyBudget || 0)})`);
       return;
@@ -93,7 +94,15 @@ export default function ProvisionsPage() {
         dueDate: new Date(formData.dueDate).toISOString()
       };
 
-      await provisionService.create(dataToSend);
+      if (editingId) {
+        // Update existing provision
+        await provisionService.update(editingId, dataToSend);
+        setEditingId(null);
+        alert('Provisión actualizada exitosamente');
+      } else {
+        // Create new provision
+        await provisionService.create(dataToSend);
+      }
       setFormData({
         item: '',
         categoryId: categories[0]?.id || '',
@@ -104,9 +113,33 @@ export default function ProvisionsPage() {
       setShowForm(false);
       loadData();
     } catch (error) {
-      console.error('Error creating provision:', error);
-      alert('Error al crear la provisión');
+      console.error('Error al guardar provisión:', error);
+      alert('Error al guardar la provisión');
     }
+  };
+
+  const handleEdit = (provision: Provision) => {
+    setEditingId(provision.id);
+    setFormData({
+      item: provision.item,
+      categoryId: provision.categoryId,
+      amount: Math.abs(provision.amount),
+      dueDate: provision.dueDate.split('T')[0],
+      notes: provision.notes || ''
+    });
+    setShowForm(true);
+  };
+
+  const handleCancel = () => {
+    setEditingId(null);
+    setFormData({
+      item: '',
+      categoryId: categories[0]?.id || '',
+      amount: 0,
+      dueDate: getDefaultDueDate(),
+      notes: ''
+    });
+    setShowForm(false);
   };
 
   const handleDelete = async (id: string) => {
@@ -284,7 +317,7 @@ export default function ProvisionsPage() {
       {showForm && (
         <Card>
           <CardHeader>
-            <CardTitle>Nueva Provisión</CardTitle>
+            <CardTitle>{editingId ? 'Editar Provisión' : 'Nueva Provisión'}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -339,8 +372,8 @@ export default function ProvisionsPage() {
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               />
               <div className="flex gap-2">
-                <Button type="submit">Guardar</Button>
-                <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>
+                <Button type="submit">{editingId ? 'Actualizar' : 'Guardar'}</Button>
+                <Button type="button" variant="secondary" onClick={handleCancel}>
                   Cancelar
                 </Button>
               </div>
@@ -433,6 +466,13 @@ export default function ProvisionsPage() {
                                 Cerrar
                               </Button>
                             )}
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => handleEdit(provision)}
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </Button>
                             <Button
                               variant="danger"
                               size="sm"
