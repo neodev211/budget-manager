@@ -20,3 +20,7 @@ export function formatDate(date: string | Date): string {
     day: 'numeric'
   }).format(new Date(date))
 }
+
+export function formatPercent(percent: number): string {
+  return `${percent.toFixed(1)}%`
+}

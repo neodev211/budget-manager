@@ -4,13 +4,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, FolderOpen, FileText, Wallet, Menu, X } from 'lucide-react';
+import { LayoutDashboard, FolderOpen, FileText, Wallet, Menu, X, BarChart3 } from 'lucide-react';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/categories', label: 'Categorías', icon: FolderOpen },
   { href: '/provisions', label: 'Provisiones', icon: FileText },
   { href: '/expenses', label: 'Gastos', icon: Wallet },
+  { href: '/reports', label: 'Reportes', icon: BarChart3 },
 ];
 
 export default function Navigation() {
