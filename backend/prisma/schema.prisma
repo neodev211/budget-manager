@@ -28,6 +28,7 @@ model Category {
   expenses       Expense[]
 
   @@unique([name, period])
+  @@index([period]) // ✅ OPTIMIZED: Fast queries by period
   @@map("categories")
 }
 
@@ -45,6 +46,10 @@ model Provision {
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   expenses   Expense[]
 
+  @@index([categoryId]) // ✅ OPTIMIZED: Fast queries by category
+  @@index([status]) // ✅ OPTIMIZED: Fast queries by status
+  @@index([categoryId, status]) // ✅ OPTIMIZED: Fast filtering by category and status
+  @@index([dueDate]) // ✅ OPTIMIZED: Fast queries by due date
   @@map("provisions")
 }
 
@@ -63,6 +68,10 @@ model Expense {
   category      Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   provision     Provision? @relation(fields: [provisionId], references: [id], onDelete: SetNull)
 
+  @@index([categoryId]) // ✅ OPTIMIZED: Fast queries by category
+  @@index([provisionId]) // ✅ OPTIMIZED: Fast queries by provision
+  @@index([date]) // ✅ OPTIMIZED: Fast queries by date
+  @@index([categoryId, date]) // ✅ OPTIMIZED: Fast filtering by category and date
   @@map("expenses")
 }
 
