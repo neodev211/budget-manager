@@ -9,7 +9,7 @@ import FilterBar from '@/components/FilterBar';
 import { expenseService } from '@/services/expenseService';
 import { categoryService } from '@/services/categoryService';
 import { provisionService } from '@/services/provisionService';
-import { Expense, CreateExpenseDTO, Category, Provision, ProvisionStatus } from '@/types';
+import { Expense, CreateExpenseDTO, Category, Provision, ProvisionStatus, PaymentMethod } from '@/types';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Plus, Trash2, Edit2, Wallet } from 'lucide-react';
 
@@ -26,11 +26,13 @@ export default function ExpensesPage() {
   const [filterCategoryId, setFilterCategoryId] = useState<string>('');
   const [filterProvisionId, setFilterProvisionId] = useState<string>('');
   const [filterDescription, setFilterDescription] = useState<string>('');
+  const [filterPaymentMethod, setFilterPaymentMethod] = useState<string>('');
   const [formData, setFormData] = useState<CreateExpenseDTO>({
     date: new Date().toISOString().split('T')[0],
     description: '',
     categoryId: '',
     amount: 0,
+    paymentMethod: PaymentMethod.CASH,
     provisionId: undefined
   });
 
@@ -159,6 +161,7 @@ export default function ExpensesPage() {
         description: '',
         categoryId: categories[0]?.id || '',
         amount: 0,
+        paymentMethod: PaymentMethod.CASH,
         provisionId: undefined
       });
       setShowForm(false);
@@ -176,6 +179,7 @@ export default function ExpensesPage() {
       description: expense.description,
       categoryId: expense.categoryId,
       amount: Math.abs(expense.amount),
+      paymentMethod: expense.paymentMethod,
       provisionId: expense.provisionId
     });
     setShowForm(true);
@@ -188,6 +192,7 @@ export default function ExpensesPage() {
       description: '',
       categoryId: categories[0]?.id || '',
       amount: 0,
+      paymentMethod: PaymentMethod.CASH,
       provisionId: undefined
     });
     setShowForm(false);
@@ -211,6 +216,26 @@ export default function ExpensesPage() {
   const getProvisionName = (provisionId?: string) => {
     if (!provisionId) return '-';
     return provisions.find(p => p.id === provisionId)?.item || 'Provisión desconocida';
+  };
+
+  const getPaymentMethodIcon = (method?: string) => {
+    const icons: Record<string, string> = {
+      'CASH': '💵',
+      'TRANSFER': '🏦',
+      'CARD': '💳',
+      'OTHER': '📄'
+    };
+    return icons[method || 'CASH'] || '📄';
+  };
+
+  const getPaymentMethodLabel = (method?: string) => {
+    const labels: Record<string, string> = {
+      'CASH': 'Efectivo',
+      'TRANSFER': 'Transferencia',
+      'CARD': 'Tarjeta',
+      'OTHER': 'Otro'
+    };
+    return labels[method || 'CASH'] || 'Desconocido';
   };
 
   // Filtrar provisiones abiertas de la categoría seleccionada
@@ -245,6 +270,10 @@ export default function ExpensesPage() {
       );
     }
 
+    if (filterPaymentMethod) {
+      filtered = filtered.filter((e) => e.paymentMethod === filterPaymentMethod);
+    }
+
     return filtered;
   };
 
@@ -267,6 +296,7 @@ export default function ExpensesPage() {
     setFilterCategoryId('');
     setFilterProvisionId('');
     setFilterDescription('');
+    setFilterPaymentMethod('');
   };
 
   const hasActiveFilters =
@@ -274,7 +304,8 @@ export default function ExpensesPage() {
     filterDateTo !== '' ||
     filterCategoryId !== '' ||
     filterProvisionId !== '' ||
-    filterDescription !== '';
+    filterDescription !== '' ||
+    filterPaymentMethod !== '';
 
   const getFilteredTotalExpenses = () => {
     return getFilteredExpenses().reduce((sum, exp) => sum + Math.abs(exp.amount), 0);
@@ -327,7 +358,7 @@ export default function ExpensesPage() {
         <FilterBar
           onClear={handleClearFilters}
           hasActiveFilters={hasActiveFilters}
-          activeFilterCount={[filterDateFrom, filterDateTo, filterCategoryId, filterProvisionId, filterDescription].filter(f => f).length}
+          activeFilterCount={[filterDateFrom, filterDateTo, filterCategoryId, filterProvisionId, filterDescription, filterPaymentMethod].filter(f => f).length}
         >
           <Input
             label="Desde"
@@ -361,6 +392,18 @@ export default function ExpensesPage() {
               onChange={(e) => setFilterProvisionId(e.target.value)}
             />
           )}
+          <Select
+            label="Método de Pago"
+            options={[
+              { value: '', label: 'Todos' },
+              { value: 'CASH', label: '💵 Efectivo' },
+              { value: 'TRANSFER', label: '🏦 Transferencia' },
+              { value: 'CARD', label: '💳 Tarjeta' },
+              { value: 'OTHER', label: '📄 Otro' }
+            ]}
+            value={filterPaymentMethod}
+            onChange={(e) => setFilterPaymentMethod(e.target.value)}
+          />
         </FilterBar>
       )}
 
@@ -437,6 +480,21 @@ export default function ExpensesPage() {
                   </p>
                 </div>
               )}
+
+              {/* Método de Pago (opcional) */}
+              <div className="border-t pt-4">
+                <Select
+                  label="Método de Pago (opcional)"
+                  options={[
+                    { value: PaymentMethod.CASH, label: '💵 Efectivo' },
+                    { value: PaymentMethod.TRANSFER, label: '🏦 Transferencia' },
+                    { value: PaymentMethod.CARD, label: '💳 Tarjeta' },
+                    { value: PaymentMethod.OTHER, label: '📄 Otro' }
+                  ]}
+                  value={formData.paymentMethod || PaymentMethod.CASH}
+                  onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value as PaymentMethod })}
+                />
+              </div>
 
               {/* Fecha (opcional - por defecto hoy) */}
               <div className="border-t pt-4">
@@ -515,6 +573,9 @@ export default function ExpensesPage() {
                       Provisión
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Método de Pago
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Monto
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -536,6 +597,12 @@ export default function ExpensesPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {getProvisionName(expense.provisionId)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <span className="flex items-center gap-2">
+                          {getPaymentMethodIcon(expense.paymentMethod)}
+                          {getPaymentMethodLabel(expense.paymentMethod)}
+                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">
                         {formatCurrency(Math.abs(expense.amount))}
