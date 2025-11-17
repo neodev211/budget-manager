@@ -366,7 +366,11 @@ export default function ProvisionsPage() {
 
       {/* Filtros */}
       {provisions.length > 0 && (
-        <FilterBar onClear={handleClearFilters} hasActiveFilters={hasActiveFilters}>
+        <FilterBar
+          onClear={handleClearFilters}
+          hasActiveFilters={hasActiveFilters}
+          activeFilterCount={[filterCategoryId, filterStatus !== 'ALL' ? filterStatus : '', filterDueDateFrom, filterDueDateTo, filterItemName].filter(f => f).length}
+        >
           <Select
             label="Categoría"
             options={[{ value: '', label: 'Todas' }, ...categories.map((c) => ({ value: c.id, label: c.name }))]}
@@ -384,6 +388,12 @@ export default function ProvisionsPage() {
             onChange={(e) => setFilterStatus(e.target.value)}
           />
           <Input
+            label="Buscar por item"
+            placeholder="Ej: Donación..."
+            value={filterItemName}
+            onChange={(e) => setFilterItemName(e.target.value)}
+          />
+          <Input
             label="Vencimiento desde"
             type="date"
             value={filterDueDateFrom}
@@ -394,12 +404,6 @@ export default function ProvisionsPage() {
             type="date"
             value={filterDueDateTo}
             onChange={(e) => setFilterDueDateTo(e.target.value)}
-          />
-          <Input
-            label="Buscar por item"
-            placeholder="Ej: Donación..."
-            value={filterItemName}
-            onChange={(e) => setFilterItemName(e.target.value)}
           />
         </FilterBar>
       )}

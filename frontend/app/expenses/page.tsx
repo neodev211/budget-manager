@@ -324,7 +324,11 @@ export default function ExpensesPage() {
 
       {/* Filtros */}
       {expenses.length > 0 && (
-        <FilterBar onClear={handleClearFilters} hasActiveFilters={hasActiveFilters}>
+        <FilterBar
+          onClear={handleClearFilters}
+          hasActiveFilters={hasActiveFilters}
+          activeFilterCount={[filterDateFrom, filterDateTo, filterCategoryId, filterProvisionId, filterDescription].filter(f => f).length}
+        >
           <Input
             label="Desde"
             type="date"
@@ -343,18 +347,20 @@ export default function ExpensesPage() {
             value={filterCategoryId}
             onChange={(e) => setFilterCategoryId(e.target.value)}
           />
-          <Select
-            label="Provisión"
-            options={[{ value: '', label: 'Todas' }, ...provisions.map((p) => ({ value: p.id, label: p.item }))]}
-            value={filterProvisionId}
-            onChange={(e) => setFilterProvisionId(e.target.value)}
-          />
           <Input
             label="Buscar descripción"
             placeholder="Ej: Supermercado..."
             value={filterDescription}
             onChange={(e) => setFilterDescription(e.target.value)}
           />
+          {provisions.length > 0 && (
+            <Select
+              label="Provisión"
+              options={[{ value: '', label: 'Todas' }, ...provisions.map((p) => ({ value: p.id, label: p.item }))]}
+              value={filterProvisionId}
+              onChange={(e) => setFilterProvisionId(e.target.value)}
+            />
+          )}
         </FilterBar>
       )}
 

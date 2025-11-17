@@ -165,7 +165,11 @@ export default function CategoriesPage() {
       </div>
 
       {categories.length > 0 && (
-        <FilterBar onClear={handleClearFilters} hasActiveFilters={hasActiveFilters}>
+        <FilterBar
+          onClear={handleClearFilters}
+          hasActiveFilters={hasActiveFilters}
+          activeFilterCount={[filterPeriod, filterName].filter(f => f).length}
+        >
           <Select
             label="Período"
             options={[{ value: '', label: 'Todos los períodos' }, ...getUniquePeriods()]}
