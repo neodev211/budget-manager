@@ -394,22 +394,22 @@ export default function ProvisionsPage() {
                               </span>
                             </div>
 
-                            <div className="mt-3 grid grid-cols-3 gap-4">
+                            <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
                               <div>
-                                <p className="text-xs text-gray-500">Monto Provisionado</p>
-                                <p className="text-lg font-bold text-amber-600">
+                                <p className="text-xs text-gray-500 truncate">Provisionado</p>
+                                <p className="text-base md:text-lg font-bold text-amber-600 break-words">
                                   {formatCurrency(Math.abs(provision.amount))}
                                 </p>
                               </div>
                               <div>
-                                <p className="text-xs text-gray-500">Monto Usado</p>
-                                <p className="text-lg font-bold text-blue-600">
+                                <p className="text-xs text-gray-500 truncate">Usado</p>
+                                <p className="text-base md:text-lg font-bold text-blue-600 break-words">
                                   {formatCurrency(usedAmount)}
                                 </p>
                               </div>
-                              <div>
-                                <p className="text-xs text-gray-500">Diferencia (Restante)</p>
-                                <p className={`text-lg font-bold ${remaining > 0 ? 'text-green-600' : 'text-gray-400'}`}>
+                              <div className="col-span-2 md:col-span-1">
+                                <p className="text-xs text-gray-500 truncate">Restante</p>
+                                <p className={`text-base md:text-lg font-bold break-words ${remaining > 0 ? 'text-green-600' : 'text-gray-400'}`}>
                                   {formatCurrency(remaining)}
                                 </p>
                               </div>
