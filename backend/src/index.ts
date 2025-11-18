@@ -15,7 +15,19 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middlewares
-app.use(cors());
+// ✅ CORS Configuration: Allow requests from Vercel frontend with credentials
+const corsOptions = {
+  origin: [
+    'http://localhost:3001', // Local development
+    'http://localhost:3000', // Fallback local
+    'https://budget-manager-nu-liart.vercel.app', // Production Vercel frontend
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+app.use(cors(corsOptions));
 // ✅ OPTIMIZED: Compression middleware to reduce response sizes by 60-80%
 app.use(compression({
   filter: (req, res) => {

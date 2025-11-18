@@ -20,6 +20,12 @@ export const authenticateToken = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
+  // ✅ Allow CORS preflight OPTIONS requests to pass through
+  if (req.method === 'OPTIONS') {
+    next();
+    return;
+  }
+
   try {
     const authHeader = req.headers.authorization;
 
