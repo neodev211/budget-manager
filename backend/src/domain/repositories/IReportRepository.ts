@@ -5,12 +5,13 @@ import { PaymentMethodReport } from '../entities/PaymentMethodReport';
 import { ProvisionFulfillmentReport } from '../entities/ProvisionFulfillmentReport';
 
 export interface IReportRepository {
-  getExecutiveSummary(period?: string): Promise<ExecutiveSummary[]>;
-  getExecutiveSummaryByCategory(categoryId: string): Promise<ExecutiveSummary>;
+  // All methods now require userId for multi-tenancy support
+  getExecutiveSummary(userId: string, period?: string): Promise<ExecutiveSummary[]>;
+  getExecutiveSummaryByCategory(userId: string, categoryId: string): Promise<ExecutiveSummary>;
 
   // New report methods
-  getCategoryDetailReport(categoryId: string, period: string): Promise<CategoryDetailReport>;
-  getPeriodComparisonReport(periods: string[]): Promise<PeriodComparisonReport>;
-  getPaymentMethodReport(period: string): Promise<PaymentMethodReport>;
-  getProvisionFulfillmentReport(period: string): Promise<ProvisionFulfillmentReport>;
+  getCategoryDetailReport(userId: string, categoryId: string, period: string): Promise<CategoryDetailReport>;
+  getPeriodComparisonReport(userId: string, periods: string[]): Promise<PeriodComparisonReport>;
+  getPaymentMethodReport(userId: string, period: string): Promise<PaymentMethodReport>;
+  getProvisionFulfillmentReport(userId: string, period: string): Promise<ProvisionFulfillmentReport>;
 }

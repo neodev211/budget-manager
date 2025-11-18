@@ -19,10 +19,14 @@ export class PrismaReportRepository implements IReportRepository {
     return typeof decimal.toNumber === 'function' ? decimal.toNumber() : Number(decimal);
   }
 
-  async getExecutiveSummary(period?: string): Promise<ExecutiveSummary[]> {
+  async getExecutiveSummary(userId: string, period?: string): Promise<ExecutiveSummary[]> {
     // ✅ OPTIMIZED: Single query with pre-loaded relations instead of N+1 queries
+    // ✅ SECURE: Filtered by userId for multi-tenancy
     const categories = await prisma.category.findMany({
-      where: period ? { period } : undefined,
+      where: {
+        userId,
+        ...(period ? { period } : {}),
+      },
       include: {
         expenses: {
           select: { amount: true },
@@ -73,8 +77,9 @@ export class PrismaReportRepository implements IReportRepository {
     return summaries;
   }
 
-  async getExecutiveSummaryByCategory(categoryId: string): Promise<ExecutiveSummary> {
+  async getExecutiveSummaryByCategory(userId: string, categoryId: string): Promise<ExecutiveSummary> {
     // ✅ OPTIMIZED: Single query with pre-loaded relations instead of 3 queries
+    // ✅ SECURE: Verified userId ownership before returning
     const category = await prisma.category.findUnique({
       where: { id: categoryId },
       include: {
@@ -90,6 +95,11 @@ export class PrismaReportRepository implements IReportRepository {
 
     if (!category) {
       throw new Error(`Category with id "${categoryId}" not found`);
+    }
+
+    // ✅ SECURITY: Verify user owns this category
+    if (category.userId !== userId) {
+      throw new Error(`User does not have access to category "${categoryId}"`);
     }
 
     // Process in-memory (fast computation)
@@ -125,8 +135,9 @@ export class PrismaReportRepository implements IReportRepository {
     };
   }
 
-  async getCategoryDetailReport(categoryId: string, period: string): Promise<CategoryDetailReport> {
+  async getCategoryDetailReport(userId: string, categoryId: string, period: string): Promise<CategoryDetailReport> {
     // ✅ OPTIMIZED: Single query with all relations pre-loaded
+    // ✅ SECURE: Filtered by userId for multi-tenancy
     const category = await prisma.category.findUnique({
       where: { id: categoryId },
       include: {
@@ -150,6 +161,11 @@ export class PrismaReportRepository implements IReportRepository {
 
     if (!category) {
       throw new Error(`Category with id "${categoryId}" not found`);
+    }
+
+    // ✅ SECURITY: Verify user owns this category
+    if (category.userId !== userId) {
+      throw new Error(`User does not have access to category "${categoryId}"`);
     }
 
     // Filter expenses by period
@@ -217,10 +233,14 @@ export class PrismaReportRepository implements IReportRepository {
     };
   }
 
-  async getPeriodComparisonReport(periods: string[]): Promise<PeriodComparisonReport> {
+  async getPeriodComparisonReport(userId: string, periods: string[]): Promise<PeriodComparisonReport> {
     // ✅ OPTIMIZED: Single query for all categories across all periods
+    // ✅ SECURE: Filtered by userId for multi-tenancy
     const categories = await prisma.category.findMany({
-      where: { period: { in: periods } },
+      where: {
+        userId,
+        period: { in: periods },
+      },
       include: {
         expenses: {
           select: { amount: true, date: true },
@@ -344,10 +364,14 @@ export class PrismaReportRepository implements IReportRepository {
     };
   }
 
-  async getPaymentMethodReport(period: string): Promise<PaymentMethodReport> {
+  async getPaymentMethodReport(userId: string, period: string): Promise<PaymentMethodReport> {
     // ✅ OPTIMIZED: Single query to get all expenses in period
+    // ✅ SECURE: Filtered by userId for multi-tenancy
     const categories = await prisma.category.findMany({
-      where: { period },
+      where: {
+        userId,
+        period,
+      },
       include: {
         expenses: {
           select: {
@@ -434,10 +458,14 @@ export class PrismaReportRepository implements IReportRepository {
     };
   }
 
-  async getProvisionFulfillmentReport(period: string): Promise<ProvisionFulfillmentReport> {
+  async getProvisionFulfillmentReport(userId: string, period: string): Promise<ProvisionFulfillmentReport> {
     // ✅ OPTIMIZED: Single query to get all provisions in period with category data
+    // ✅ SECURE: Filtered by userId for multi-tenancy
     const categories = await prisma.category.findMany({
-      where: { period },
+      where: {
+        userId,
+        period,
+      },
       include: {
         provisions: {
           select: {
