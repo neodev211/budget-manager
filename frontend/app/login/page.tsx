@@ -66,8 +66,12 @@ export default function LoginPage() {
               },
             },
           }}
+          theme="light"
           providers={['google']}
           redirectTo={`${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback`}
+          view="sign_in"
+          showLinks={true}
+          magicLink={false}
         />
       </div>
     </div>
