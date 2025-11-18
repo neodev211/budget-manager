@@ -13,53 +13,70 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          response.cookies.set({ name, value, ...options });
-        },
-        remove(name: string, options: CookieOptions) {
-          response.cookies.set({ name, value: '', ...options });
-        },
-      },
-    }
-  );
+  // Check if Supabase environment variables are configured
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  // Refresh session if needed
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // If Supabase is not configured, allow all routes (development mode)
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn('Supabase environment variables not configured. Authentication is disabled.');
+    return response;
+  }
 
-  // Protected routes that require authentication
-  const protectedRoutes = [
-    '/',
-    '/categories',
-    '/provisions',
-    '/expenses',
-    '/reports',
-    '/dashboard',
-    '/profile',
+  let user = null;
+
+  try {
+    const supabase = createServerClient(
+      supabaseUrl,
+      supabaseAnonKey,
+      {
+        cookies: {
+          get(name: string) {
+            return request.cookies.get(name)?.value;
+          },
+          set(name: string, value: string, options: CookieOptions) {
+            response.cookies.set({ name, value, ...options });
+          },
+          remove(name: string, options: CookieOptions) {
+            response.cookies.set({ name, value: '', ...options });
+          },
+        },
+      }
+    );
+
+    // Refresh session if needed
+    const {
+      data: { user: authUser },
+    } = await supabase.auth.getUser();
+
+    user = authUser;
+  } catch (error) {
+    console.error('Error in auth middleware:', error);
+    // If authentication fails, treat as unauthenticated user
+    user = null;
+  }
+
+  // Public routes that don't require authentication
+  const publicRoutes = [
+    '/login',
+    '/auth/callback',
+    '/auth/auth-code-error',
   ];
 
-  // Check if route is protected
-  const isProtectedRoute = protectedRoutes.some((route) =>
+  // Check if current route is public
+  const isPublicRoute = publicRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)
   );
 
-  // Redirect to login if not authenticated and accessing protected route
-  if (!user && isProtectedRoute) {
-    return NextResponse.redirect(new URL('/login', request.url));
+  // If it's a public route, allow access
+  if (isPublicRoute) {
+    return response;
   }
 
-  // Redirect to home if authenticated and trying to access login
-  if (user && request.nextUrl.pathname.startsWith('/login')) {
-    return NextResponse.redirect(new URL('/', request.url));
+  // All other routes require authentication
+  // Redirect to login if not authenticated
+  if (!user) {
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
   return response;
