@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, FolderOpen, FileText, Wallet, Menu, X, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, FolderOpen, FileText, Wallet, Menu, X, BarChart3, LogOut } from 'lucide-react';
+import { useAuth } from '@/lib/auth/AuthContext';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -16,7 +17,10 @@ const navItems = [
 
 export default function Navigation() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -24,6 +28,18 @@ export default function Navigation() {
 
   const closeMenu = () => {
     setIsOpen(false);
+  };
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await signOut();
+      router.push('/login');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -38,7 +54,7 @@ export default function Navigation() {
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden sm:flex sm:space-x-8">
+          <div className="hidden sm:flex sm:space-x-8 sm:items-center">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -58,10 +74,32 @@ export default function Navigation() {
                 </Link>
               );
             })}
+
+            {/* Logout Button - Desktop */}
+            <button
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors disabled:opacity-50"
+              title="Cerrar sesión"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              {isLoggingOut ? 'Cerrando...' : 'Salir'}
+            </button>
           </div>
 
-          {/* Mobile Hamburger Button */}
-          <div className="sm:hidden">
+          {/* Mobile Menu Button + Logout */}
+          <div className="sm:hidden flex items-center space-x-2">
+            {/* Logout Button - Mobile */}
+            <button
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="inline-flex items-center justify-center p-2 rounded-md text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors disabled:opacity-50"
+              title="Cerrar sesión"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+
+            {/* Hamburger Button */}
             <button
               onClick={toggleMenu}
               className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
@@ -103,6 +141,24 @@ export default function Navigation() {
                   </Link>
                 );
               })}
+
+              {/* Logout Button - Mobile Dropdown */}
+              <button
+                onClick={() => {
+                  closeMenu();
+                  handleLogout();
+                }}
+                disabled={isLoggingOut}
+                className={cn(
+                  'w-full text-left block px-3 py-2 rounded-md text-base font-medium',
+                  'text-red-600 hover:text-red-700 hover:bg-red-50 disabled:opacity-50'
+                )}
+              >
+                <span className="flex items-center">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  {isLoggingOut ? 'Cerrando...' : 'Salir'}
+                </span>
+              </button>
             </div>
           </div>
         )}
