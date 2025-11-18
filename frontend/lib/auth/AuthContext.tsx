@@ -37,17 +37,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Initialize auth state on mount
   useEffect(() => {
-    // Get initial session
+    let mounted = true;
+
+    // Get initial session with timeout
     const getInitialSession = async () => {
       try {
+        // Add timeout to prevent infinite loading
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Session check timeout')), 10000)
+        );
+
+        const sessionPromise = supabase.auth.getSession();
+
         const {
           data: { session },
-        } = await supabase.auth.getSession();
-        setUser(session?.user ?? null);
+        } = await Promise.race([sessionPromise, timeoutPromise]) as any;
+
+        if (mounted) {
+          setUser(session?.user ?? null);
+        }
       } catch (error) {
         console.error('Error getting initial session:', error);
+        // Even on error, set loading to false to prevent infinite loading
+        if (mounted) {
+          setUser(null);
+        }
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -57,10 +75,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      if (mounted) {
+        setUser(session?.user ?? null);
+      }
     });
 
     return () => {
+      mounted = false;
       subscription?.unsubscribe();
     };
   }, [supabase]);
