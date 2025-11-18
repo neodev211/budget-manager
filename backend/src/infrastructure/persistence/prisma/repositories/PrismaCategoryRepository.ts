@@ -14,6 +14,7 @@ export class PrismaCategoryRepository implements ICategoryRepository {
   async create(data: CreateCategoryDTO): Promise<Category> {
     const prismaCategory = await prisma.category.create({
       data: {
+        userId: data.userId,
         name: data.name,
         period: data.period,
         monthlyBudget: data.monthlyBudget,

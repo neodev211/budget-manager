@@ -25,6 +25,7 @@ export class TypeORMCategoryRepository implements ICategoryRepository {
   async create(data: CreateCategoryDTO): Promise<Category> {
     const category = await prisma.category.create({
       data: {
+        userId: data.userId,
         name: data.name,
         period: data.period,
         monthlyBudget: data.monthlyBudget,
@@ -33,6 +34,7 @@ export class TypeORMCategoryRepository implements ICategoryRepository {
 
     return {
       id: category.id,
+      userId: category.userId,
       name: category.name,
       period: category.period,
       monthlyBudget: Number(category.monthlyBudget),
@@ -49,6 +51,7 @@ export class TypeORMCategoryRepository implements ICategoryRepository {
 
     return categories.map((cat) => ({
       id: cat.id,
+      userId: cat.userId,
       name: cat.name,
       period: cat.period,
       monthlyBudget: Number(cat.monthlyBudget),
@@ -69,6 +72,7 @@ export class TypeORMCategoryRepository implements ICategoryRepository {
 
     return {
       id: category.id,
+      userId: category.userId,
       name: category.name,
       period: category.period,
       monthlyBudget: Number(category.monthlyBudget),
@@ -87,6 +91,7 @@ export class TypeORMCategoryRepository implements ICategoryRepository {
 
     return categories.map((cat) => ({
       id: cat.id,
+      userId: cat.userId,
       name: cat.name,
       period: cat.period,
       monthlyBudget: Number(cat.monthlyBudget),
@@ -110,6 +115,7 @@ export class TypeORMCategoryRepository implements ICategoryRepository {
 
     return {
       id: category.id,
+      userId: category.userId,
       name: category.name,
       period: category.period,
       monthlyBudget: Number(category.monthlyBudget),

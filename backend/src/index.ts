@@ -7,6 +7,7 @@ import categoryRoutes from './presentation/routes/categoryRoutes';
 import provisionRoutes from './presentation/routes/provisionRoutes';
 import expenseRoutes from './presentation/routes/expenseRoutes';
 import reportRoutes from './presentation/routes/reportRoutes';
+import { authenticateToken } from './infrastructure/middleware/authMiddleware';
 
 dotenv.config();
 
@@ -25,12 +26,15 @@ app.use(compression({
 }));
 app.use(express.json());
 
-// Health check
+// Public routes (no authentication required)
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Budget Management API is running' });
 });
 
-// Routes
+// ✅ PROTECTED ROUTES: Apply authentication middleware globally to all /api routes
+app.use('/api', authenticateToken);
+
+// Routes (all protected by authenticateToken middleware)
 app.use('/api/categories', categoryRoutes);
 app.use('/api/provisions', provisionRoutes);
 app.use('/api/expenses', expenseRoutes);

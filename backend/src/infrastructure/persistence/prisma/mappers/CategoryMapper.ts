@@ -24,6 +24,7 @@ export class CategoryMapper {
   static toDomain(prismaCategory: CategoryEntity): Category {
     return {
       id: prismaCategory.id,
+      userId: prismaCategory.userId,
       name: prismaCategory.name,
       period: prismaCategory.period,
       monthlyBudget: Money.fromDecimal(prismaCategory.monthlyBudget).value,
@@ -50,6 +51,7 @@ export class CategoryMapper {
   ): Omit<CategoryEntity, 'createdAt' | 'updatedAt'> {
     return {
       id: category.id,
+      userId: category.userId,
       name: category.name,
       period: category.period,
       monthlyBudget: category.monthlyBudget as any, // Prisma manejará la conversión a Decimal

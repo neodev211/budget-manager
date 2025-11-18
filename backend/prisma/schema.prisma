@@ -14,9 +14,24 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// USER DOMAIN (Supabase Auth)
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  avatarUrl String?  @map("avatar_url")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  categories Category[]
+
+  @@map("users")
+}
+
 // BUDGETING DOMAIN
 model Category {
   id             String    @id @default(uuid())
+  userId         String    @map("user_id")
   name           String
   period         String    // Format: "2025-10" (YYYY-MM)
   monthlyBudget  Decimal   @map("monthly_budget") @db.Decimal(10, 2)
@@ -24,10 +39,12 @@ model Category {
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   provisions     Provision[]
   expenses       Expense[]
 
-  @@unique([name, period])
+  @@unique([userId, name, period])
+  @@index([userId])
   @@index([period]) // ✅ OPTIMIZED: Fast queries by period
   @@map("categories")
 }

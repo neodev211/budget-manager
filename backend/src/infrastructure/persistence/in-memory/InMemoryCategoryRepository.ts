@@ -29,6 +29,7 @@ export class InMemoryCategoryRepository implements ICategoryRepository {
 
     const category: Category = {
       id,
+      userId: data.userId,
       name: data.name,
       period: data.period,
       monthlyBudget: data.monthlyBudget,

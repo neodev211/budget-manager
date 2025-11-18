@@ -35,6 +35,7 @@ export class CreateCategoryUseCase {
 
     // Crear la categoría
     const category = await this.categoryRepository.create({
+      userId: input.userId,
       name: input.name.trim(),
       period: period.value,
       monthlyBudget: money.value,

@@ -1,5 +1,6 @@
 export interface Category {
   id: string;
+  userId: string;
   name: string;
   period: string; // Format: "2025-10"
   monthlyBudget: number;
@@ -9,6 +10,7 @@ export interface Category {
 }
 
 export interface CreateCategoryDTO {
+  userId: string;
   name: string;
   period: string;
   monthlyBudget: number;
