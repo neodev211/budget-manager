@@ -48,14 +48,46 @@ export default function Dashboard() {
 
   if (summaries.length === 0) {
     return (
-      <div className="text-center py-12">
-        <PiggyBank className="mx-auto h-12 w-12 text-gray-400" />
-        <h3 className="mt-2 text-sm font-medium text-gray-900">
-          No hay datos disponibles
-        </h3>
-        <p className="mt-1 text-sm text-gray-500">
-          Comienza creando una categoría para gestionar tu presupuesto.
-        </p>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Card className="max-w-2xl w-full">
+          <CardContent className="text-center py-12 px-8">
+            <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-blue-100 mb-6">
+              <PiggyBank className="h-12 w-12 text-blue-600" />
+            </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              ¡Bienvenido a Budget Manager!
+            </h2>
+            <p className="text-lg text-gray-600 mb-6">
+              Comienza a gestionar tu presupuesto de forma inteligente.
+            </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8 text-left">
+              <h3 className="font-semibold text-blue-900 mb-3">
+                Para empezar, necesitas:
+              </h3>
+              <ol className="space-y-2 text-blue-800">
+                <li className="flex items-start">
+                  <span className="font-bold mr-2">1.</span>
+                  <span>Crear tu primera categoría de presupuesto (ej: "Gastos del Hogar")</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="font-bold mr-2">2.</span>
+                  <span>Definir tu presupuesto mensual para esa categoría</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="font-bold mr-2">3.</span>
+                  <span>Registrar tus gastos y provisiones</span>
+                </li>
+              </ol>
+            </div>
+            <a
+              href="/categories"
+              className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <PiggyBank className="w-5 h-5 mr-2" />
+              Crear mi primera categoría
+            </a>
+          </CardContent>
+        </Card>
       </div>
     );
   }

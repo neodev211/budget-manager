@@ -52,6 +52,27 @@ export class PrismaCategoryRepository implements ICategoryRepository {
     return CategoryMapper.toDomainArray(prismaCategories);
   }
 
+  async findByUserId(userId: string): Promise<Category[]> {
+    const prismaCategories = await prisma.category.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return CategoryMapper.toDomainArray(prismaCategories);
+  }
+
+  async findByUserIdAndPeriod(userId: string, period: string): Promise<Category[]> {
+    const prismaCategories = await prisma.category.findMany({
+      where: {
+        userId,
+        period,
+      },
+      orderBy: { name: 'asc' },
+    });
+
+    return CategoryMapper.toDomainArray(prismaCategories);
+  }
+
   async update(id: string, data: UpdateCategoryDTO): Promise<Category> {
     const prismaCategory = await prisma.category.update({
       where: { id },

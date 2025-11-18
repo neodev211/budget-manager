@@ -101,6 +101,44 @@ export class TypeORMCategoryRepository implements ICategoryRepository {
   }
 
   /**
+   * Get categories by userId
+   */
+  async findByUserId(userId: string): Promise<Category[]> {
+    const categories = await prisma.category.findMany({
+      where: { userId },
+    });
+
+    return categories.map((cat) => ({
+      id: cat.id,
+      userId: cat.userId,
+      name: cat.name,
+      period: cat.period,
+      monthlyBudget: Number(cat.monthlyBudget),
+      createdAt: cat.createdAt,
+      updatedAt: cat.updatedAt,
+    }));
+  }
+
+  /**
+   * Get categories by userId and period
+   */
+  async findByUserIdAndPeriod(userId: string, period: string): Promise<Category[]> {
+    const categories = await prisma.category.findMany({
+      where: { userId, period },
+    });
+
+    return categories.map((cat) => ({
+      id: cat.id,
+      userId: cat.userId,
+      name: cat.name,
+      period: cat.period,
+      monthlyBudget: Number(cat.monthlyBudget),
+      createdAt: cat.createdAt,
+      updatedAt: cat.updatedAt,
+    }));
+  }
+
+  /**
    * Update a category
    */
   async update(id: string, data: UpdateCategoryDTO): Promise<Category> {

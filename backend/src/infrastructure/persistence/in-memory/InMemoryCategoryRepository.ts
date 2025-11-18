@@ -56,6 +56,18 @@ export class InMemoryCategoryRepository implements ICategoryRepository {
     );
   }
 
+  async findByUserId(userId: string): Promise<Category[]> {
+    return Array.from(this.categories.values()).filter(
+      cat => cat.userId === userId
+    );
+  }
+
+  async findByUserIdAndPeriod(userId: string, period: string): Promise<Category[]> {
+    return Array.from(this.categories.values()).filter(
+      cat => cat.userId === userId && cat.period === period
+    );
+  }
+
   async update(id: string, data: UpdateCategoryDTO): Promise<Category> {
     const category = this.categories.get(id);
     if (!category) {
