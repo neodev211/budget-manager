@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Auth } from '@supabase/auth-ui-react';
@@ -11,6 +11,8 @@ export default function LoginPage() {
   const supabase = createClient();
   const router = useRouter();
   const { user, loading } = useAuth();
+  const [view, setView] = useState<'sign_in' | 'sign_up'>('sign_in');
+  const [authError, setAuthError] = useState<string | null>(null);
 
   // Listen for auth state changes to detect sign in
   useEffect(() => {
@@ -18,7 +20,10 @@ export default function LoginPage() {
       async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
           // User signed in successfully
+          setAuthError(null);
           router.push('/');
+        } else if (event === 'USER_UPDATED') {
+          setAuthError(null);
         }
       }
     );
@@ -32,6 +37,24 @@ export default function LoginPage() {
       router.push('/');
     }
   }, [user, loading, router]);
+
+  // Listen for auth errors
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === 'SIGNED_OUT' && !session) {
+          // Check localStorage for error messages from Supabase
+          const error = localStorage.getItem('supabase.auth.error');
+          if (error) {
+            setAuthError(error);
+            localStorage.removeItem('supabase.auth.error');
+          }
+        }
+      }
+    );
+
+    return () => subscription?.unsubscribe();
+  }, [supabase.auth]);
 
   if (loading) {
     return (
@@ -53,6 +76,50 @@ export default function LoginPage() {
           Manage your finances with ease
         </p>
 
+        {/* Error Alert */}
+        {authError && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-sm text-red-800 font-medium">Error de autenticación:</p>
+            <p className="text-sm text-red-700 mt-1">{authError}</p>
+            <button
+              onClick={() => setAuthError(null)}
+              className="text-xs text-red-600 hover:text-red-800 mt-2 underline"
+            >
+              Descartar
+            </button>
+          </div>
+        )}
+
+        {/* View Toggle Buttons */}
+        <div className="flex gap-2 mb-6">
+          <button
+            onClick={() => {
+              setView('sign_in');
+              setAuthError(null);
+            }}
+            className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
+              view === 'sign_in'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Ingresar
+          </button>
+          <button
+            onClick={() => {
+              setView('sign_up');
+              setAuthError(null);
+            }}
+            className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
+              view === 'sign_up'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Registrarse
+          </button>
+        </div>
+
         <Auth
           supabaseClient={supabase}
           appearance={{
@@ -69,7 +136,7 @@ export default function LoginPage() {
           theme="light"
           providers={['google']}
           redirectTo={`${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback`}
-          view="sign_in"
+          view={view}
           showLinks={true}
           magicLink={false}
         />
