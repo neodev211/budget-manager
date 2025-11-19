@@ -12,8 +12,10 @@ import { provisionService } from '@/services/provisionService';
 import { Expense, CreateExpenseDTO, Category, Provision, ProvisionStatus, PaymentMethod } from '@/types';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Plus, Trash2, Edit2, Wallet } from 'lucide-react';
+import { useToastContext } from '@/lib/context/ToastContext';
 
 export default function ExpensesPage() {
+  const toast = useToastContext();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [provisions, setProvisions] = useState<Provision[]>([]);

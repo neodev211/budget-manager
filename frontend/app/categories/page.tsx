@@ -13,6 +13,7 @@ import { provisionService } from '@/services/provisionService';
 import { Category, CreateCategoryDTO } from '@/types';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Plus, Trash2, Edit2 } from 'lucide-react';
+import { useToastContext } from '@/lib/context/ToastContext';
 
 const getDefaultPeriod = () => {
   const today = new Date();
@@ -22,6 +23,7 @@ const getDefaultPeriod = () => {
 };
 
 export default function CategoriesPage() {
+  const toast = useToastContext();
   const [categories, setCategories] = useState<Category[]>([]);
   const [expenses, setExpenses] = useState<any[]>([]);
   const [provisions, setProvisions] = useState<any[]>([]);
@@ -67,17 +69,18 @@ export default function CategoriesPage() {
         // Update existing category
         await categoryService.update(editingId, formData);
         setEditingId(null);
-        alert('Categoría actualizada exitosamente');
+        toast.success('✅ Categoría actualizada exitosamente');
       } else {
         // Create new category
         await categoryService.create(formData);
+        toast.success('✅ Categoría creada exitosamente');
       }
       setFormData({ name: '', period: getDefaultPeriod(), monthlyBudget: 0, notes: '' });
       setShowForm(false);
       loadCategories();
     } catch (error) {
       console.error('Error al guardar categoría:', error);
-      alert('Error al guardar la categoría');
+      toast.error('❌ Error al guardar la categoría');
     }
   };
 
@@ -102,10 +105,11 @@ export default function CategoriesPage() {
     if (!confirm('¿Estás seguro de eliminar esta categoría?')) return;
     try {
       await categoryService.delete(id);
+      toast.success('✅ Categoría eliminada exitosamente');
       loadCategories();
     } catch (error) {
       console.error('Error deleting category:', error);
-      alert('Error al eliminar la categoría');
+      toast.error('❌ Error al eliminar la categoría');
     }
   };
 

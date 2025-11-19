@@ -11,8 +11,10 @@ import { categoryService } from '@/services/categoryService';
 import { Provision, CreateProvisionDTO, Category, ProvisionStatus } from '@/types';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Plus, Trash2, CheckCircle, Copy, ChevronDown, Edit2 } from 'lucide-react';
+import { useToastContext } from '@/lib/context/ToastContext';
 
 export default function ProvisionsPage() {
+  const toast = useToastContext();
   const [provisions, setProvisions] = useState<Provision[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,7 +92,7 @@ export default function ProvisionsPage() {
     // Validar que no exceda el presupuesto (solo cuando se crea una nueva)
     if (!editingId && !validateProvisionAmount(formData.categoryId, formData.amount)) {
       const category = categories.find(c => c.id === formData.categoryId);
-      alert(`La suma de provisiones no puede exceder el presupuesto de la categoría (${formatCurrency(category?.monthlyBudget || 0)})`);
+      toast.error(`❌ La suma de provisiones no puede exceder el presupuesto de la categoría (${formatCurrency(category?.monthlyBudget || 0)})`);
       return;
     }
 
@@ -105,10 +107,11 @@ export default function ProvisionsPage() {
         // Update existing provision
         await provisionService.update(editingId, dataToSend);
         setEditingId(null);
-        alert('Provisión actualizada exitosamente');
+        toast.success('✅ Provisión actualizada exitosamente');
       } else {
         // Create new provision
         await provisionService.create(dataToSend);
+        toast.success('✅ Provisión creada exitosamente');
       }
       setFormData({
         item: '',
@@ -121,7 +124,7 @@ export default function ProvisionsPage() {
       loadData();
     } catch (error) {
       console.error('Error al guardar provisión:', error);
-      alert('Error al guardar la provisión');
+      toast.error('❌ Error al guardar la provisión');
     }
   };
 
@@ -153,26 +156,28 @@ export default function ProvisionsPage() {
     if (!confirm('¿Estás seguro de eliminar esta provisión?')) return;
     try {
       await provisionService.delete(id);
+      toast.success('✅ Provisión eliminada exitosamente');
       loadData();
     } catch (error) {
       console.error('Error deleting provision:', error);
-      alert('Error al eliminar la provisión');
+      toast.error('❌ Error al eliminar la provisión');
     }
   };
 
   const handleClose = async (id: string) => {
     try {
       await provisionService.update(id, { status: ProvisionStatus.CLOSED });
+      toast.success('✅ Provisión cerrada exitosamente');
       loadData();
     } catch (error) {
       console.error('Error closing provision:', error);
-      alert('Error al cerrar la provisión');
+      toast.error('❌ Error al cerrar la provisión');
     }
   };
 
   const openBulkCopyModal = () => {
     if (categories.length < 2) {
-      alert('Necesitas al menos 2 categorías para copiar provisiones');
+      toast.error('❌ Necesitas al menos 2 categorías para copiar provisiones');
       return;
     }
     setSourceCategoryId('');
@@ -225,12 +230,12 @@ export default function ProvisionsPage() {
 
   const handleBulkCopy = async () => {
     if (!sourceCategoryId || !targetCategoryId || selectedProvisionIds.size === 0) {
-      alert('Selecciona categoría origen, destino y al menos una provisión');
+      toast.error('❌ Selecciona categoría origen, destino y al menos una provisión');
       return;
     }
 
     if (sourceCategoryId === targetCategoryId) {
-      alert('Las categorías origen y destino deben ser diferentes');
+      toast.error('❌ Las categorías origen y destino deben ser diferentes');
       return;
     }
 
@@ -240,7 +245,7 @@ export default function ProvisionsPage() {
       const selectedProvisionsSum = provisions
         .filter(p => selectedProvisionIds.has(p.id))
         .reduce((sum, p) => sum + Math.abs(p.amount), 0);
-      alert(`La suma de provisiones (${formatCurrency(selectedProvisionsSum)}) no puede exceder el presupuesto de la categoría destino (${formatCurrency(targetCategory?.monthlyBudget || 0)}). Por favor, deselecciona algunas provisiones o aumenta el presupuesto de la categoría destino.`);
+      toast.error(`❌ La suma de provisiones (${formatCurrency(selectedProvisionsSum)}) no puede exceder el presupuesto de la categoría destino (${formatCurrency(targetCategory?.monthlyBudget || 0)})`);
       return;
     }
 
@@ -249,7 +254,7 @@ export default function ProvisionsPage() {
         Array.from(selectedProvisionIds),
         targetCategoryId
       );
-      alert(`${selectedProvisionIds.size} provisión(es) copiada(s) exitosamente`);
+      toast.success(`✅ ${selectedProvisionIds.size} provisión(es) copiada(s) exitosamente`);
       setShowBulkCopyModal(false);
       setSourceCategoryId('');
       setTargetCategoryId('');
@@ -257,7 +262,7 @@ export default function ProvisionsPage() {
       loadData();
     } catch (error) {
       console.error('Error copying provisions:', error);
-      alert('Error al copiar las provisiones');
+      toast.error('❌ Error al copiar las provisiones');
     }
   };
 
