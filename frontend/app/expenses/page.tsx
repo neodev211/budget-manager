@@ -153,10 +153,11 @@ export default function ExpensesPage() {
         // Update existing expense
         await expenseService.update(editingId, dataToSend);
         setEditingId(null);
-        alert('Gasto actualizado exitosamente');
+        toast.success('✅ Gasto actualizado exitosamente');
       } else {
         // Create new expense
         await expenseService.create(dataToSend);
+        toast.success('✅ Gasto registrado exitosamente');
       }
       setFormData({
         date: new Date().toISOString().split('T')[0],
@@ -170,7 +171,7 @@ export default function ExpensesPage() {
       loadData();
     } catch (error) {
       console.error('Error al guardar gasto:', error);
-      alert('Error al guardar el gasto');
+      toast.error('❌ Error al guardar el gasto');
     }
   };
 
@@ -204,10 +205,11 @@ export default function ExpensesPage() {
     if (!confirm('¿Estás seguro de eliminar este gasto?')) return;
     try {
       await expenseService.delete(id);
+      toast.success('✅ Gasto eliminado exitosamente');
       loadData();
     } catch (error) {
       console.error('Error deleting expense:', error);
-      alert('Error al eliminar el gasto');
+      toast.error('❌ Error al eliminar el gasto');
     }
   };
 
