@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../config/supabase';
+import { PrismaClient } from '@prisma/client';
 
 /**
  * Extended Request type with authenticated user data
@@ -9,6 +10,8 @@ export interface AuthRequest extends Request {
   userEmail: string;
   userName?: string;
 }
+
+const prisma = new PrismaClient();
 
 /**
  * Middleware para verificar JWT tokens de Supabase
@@ -55,6 +58,29 @@ export const authenticateToken = async (
     authReq.userId = user.id;
     authReq.userEmail = user.email || '';
     authReq.userName = user.user_metadata?.name || undefined;
+
+    // ✅ Auto-provision user in database if doesn't exist
+    try {
+      const existingUser = await prisma.user.findUnique({
+        where: { id: user.id },
+      });
+
+      if (!existingUser) {
+        // Create user in database
+        await prisma.user.create({
+          data: {
+            id: user.id,
+            email: user.email || '',
+            name: user.user_metadata?.name || user.email?.split('@')[0],
+          },
+        });
+        console.log(`✅ User provisioned in database: ${user.email}`);
+      }
+    } catch (dbError) {
+      console.error('Error provisioning user in database:', dbError);
+      // Don't block authentication if user provisioning fails
+      // The error might be due to concurrent requests
+    }
 
     next();
   } catch (error) {
