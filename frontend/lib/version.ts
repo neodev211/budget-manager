@@ -6,10 +6,21 @@
  */
 
 export const VERSION_INFO = {
-  version: '1.1.0',
-  release: '2025.11.20.001',
+  version: '1.1.1',
+  release: '2025.11.20.002',
   releaseDate: '2025-11-20',
   changelog: [
+    {
+      version: '1.1.1',
+      release: '2025.11.20.002',
+      date: '2025-11-20',
+      changes: [
+        'Fix: Login redirect issue - removed isRedirecting state that was canceling setTimeout',
+        'Root cause: State change in dependency array was triggering effect cleanup before timer could execute',
+        'Solution: Simplified to only check !loading && user, preventing timer cancellation',
+        'Result: Redirect now properly executes after 500ms delay once user is authenticated',
+      ],
+    },
     {
       version: '1.1.0',
       release: '2025.11.20.001',

@@ -14,32 +14,30 @@ export default function LoginPage() {
   const { user, loading } = useAuth();
   const [view, setView] = useState<'sign_in' | 'sign_up'>('sign_in');
   const [authError, setAuthError] = useState<string | null>(null);
-  const [isRedirecting, setIsRedirecting] = useState(false);
 
   // Single effect to handle redirect - trust AuthContext for auth state
+  // Separated into two effects to avoid timer cleanup issues
   useEffect(() => {
     console.log('[LoginPage] Redirect effect check:', {
       loading,
       hasUser: !!user,
       userEmail: user?.email,
-      isRedirecting,
       timestamp: new Date().toISOString(),
     });
 
-    if (!loading && user && !isRedirecting) {
+    if (!loading && user) {
       // User is authenticated, redirect to dashboard
-      console.log('[LoginPage] User authenticated via context, initiating redirect to dashboard');
-      setIsRedirecting(true);
+      console.log('[LoginPage] User authenticated via context, scheduling redirect to dashboard');
 
       // Add a small delay to ensure session is fully established
       const timer = setTimeout(() => {
-        console.log('[LoginPage] Executing router.push("/") after delay');
+        console.log('[LoginPage] Executing router.push("/") after 500ms delay');
         router.push('/');
       }, 500);
 
       return () => clearTimeout(timer);
     }
-  }, [user, loading, router, isRedirecting]);
+  }, [user, loading, router]);
 
   // Listen for auth state changes and errors
   useEffect(() => {
@@ -49,17 +47,15 @@ export default function LoginPage() {
           event,
           hasSession: !!session,
           sessionUser: session?.user?.email,
-          isRedirecting,
           timestamp: new Date().toISOString(),
         });
 
-        if (event === 'SIGNED_IN' && session && !isRedirecting) {
-          // User just signed in, set flag but let the context effect handle redirect
+        if (event === 'SIGNED_IN' && session) {
+          // User just signed in, let the context effect handle redirect
           console.log('[LoginPage] SIGNED_IN event detected, waiting for context update');
           // Don't redirect here - let the user context effect handle it
         } else if (event === 'SIGNED_OUT') {
           console.log('[LoginPage] SIGNED_OUT event detected');
-          setIsRedirecting(false);
           // Check localStorage for error messages from Supabase
           const error = localStorage.getItem('supabase.auth.error');
           if (error) {
@@ -72,7 +68,7 @@ export default function LoginPage() {
     );
 
     return () => subscription?.unsubscribe();
-  }, [supabase.auth, isRedirecting]);
+  }, [supabase.auth]);
 
   if (loading) {
     return (
