@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { LayoutDashboard, FolderOpen, FileText, Wallet, Menu, X, BarChart3, LogOut } from 'lucide-react';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { getCurrentVersion } from '@/lib/version';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -48,9 +49,14 @@ export default function Navigation() {
         <div className="flex justify-between items-center h-16">
           {/* Logo - Clickeable */}
           <Link href="/" className="flex items-center flex-shrink-0 hover:opacity-80 transition-opacity">
-            <h1 className="text-xl font-bold text-gray-900">
-              💰 Budget Manager
-            </h1>
+            <div className="flex flex-col">
+              <h1 className="text-xl font-bold text-gray-900">
+                💰 Budget Manager
+              </h1>
+              <p className="text-xs text-gray-500 font-mono">
+                {getCurrentVersion()}
+              </p>
+            </div>
           </Link>
 
           {/* Desktop Menu */}
