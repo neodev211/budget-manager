@@ -6,10 +6,21 @@
  */
 
 export const VERSION_INFO = {
-  version: '1.0.9',
-  release: '2025.11.19.005',
-  releaseDate: '2025-11-19',
+  version: '1.1.0',
+  release: '2025.11.20.001',
+  releaseDate: '2025-11-20',
   changelog: [
+    {
+      version: '1.1.0',
+      release: '2025.11.20.001',
+      date: '2025-11-20',
+      changes: [
+        'Fix: Redirect not working after login - root cause identified',
+        'Solution: Added isRedirecting flag to prevent duplicate router.push calls',
+        'Added 500ms delay to ensure session is fully established before redirect',
+        'Removed duplicate redirect logic from SIGNED_IN event handler',
+      ],
+    },
     {
       version: '1.0.9',
       release: '2025.11.19.005',
