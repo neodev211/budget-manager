@@ -6,10 +6,18 @@
  */
 
 export const VERSION_INFO = {
-  version: '1.0.7',
-  release: '2025.11.19.003',
+  version: '1.0.8',
+  release: '2025.11.19.004',
   releaseDate: '2025-11-19',
   changelog: [
+    {
+      version: '1.0.8',
+      release: '2025.11.19.004',
+      date: '2025-11-19',
+      changes: [
+        'Fix: Hide logout button on login page when session is not initialized',
+      ],
+    },
     {
       version: '1.0.7',
       release: '2025.11.19.003',

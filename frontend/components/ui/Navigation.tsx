@@ -19,7 +19,7 @@ const navItems = [
 export default function Navigation() {
   const pathname = usePathname();
   const router = useRouter();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -81,29 +81,33 @@ export default function Navigation() {
               );
             })}
 
-            {/* Logout Button - Desktop */}
-            <button
-              onClick={handleLogout}
-              disabled={isLoggingOut}
-              className="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors disabled:opacity-50"
-              title="Cerrar sesión"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              {isLoggingOut ? 'Cerrando...' : 'Salir'}
-            </button>
+            {/* Logout Button - Desktop (only show when authenticated) */}
+            {user && (
+              <button
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors disabled:opacity-50"
+                title="Cerrar sesión"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                {isLoggingOut ? 'Cerrando...' : 'Salir'}
+              </button>
+            )}
           </div>
 
           {/* Mobile Menu Button + Logout */}
           <div className="sm:hidden flex items-center space-x-2">
-            {/* Logout Button - Mobile */}
-            <button
-              onClick={handleLogout}
-              disabled={isLoggingOut}
-              className="inline-flex items-center justify-center p-2 rounded-md text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors disabled:opacity-50"
-              title="Cerrar sesión"
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
+            {/* Logout Button - Mobile (only show when authenticated) */}
+            {user && (
+              <button
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="inline-flex items-center justify-center p-2 rounded-md text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors disabled:opacity-50"
+                title="Cerrar sesión"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
+            )}
 
             {/* Hamburger Button */}
             <button
@@ -148,23 +152,25 @@ export default function Navigation() {
                 );
               })}
 
-              {/* Logout Button - Mobile Dropdown */}
-              <button
-                onClick={() => {
-                  closeMenu();
-                  handleLogout();
-                }}
-                disabled={isLoggingOut}
-                className={cn(
-                  'w-full text-left block px-3 py-2 rounded-md text-base font-medium',
-                  'text-red-600 hover:text-red-700 hover:bg-red-50 disabled:opacity-50'
-                )}
-              >
-                <span className="flex items-center">
-                  <LogOut className="w-4 h-4 mr-2" />
-                  {isLoggingOut ? 'Cerrando...' : 'Salir'}
-                </span>
-              </button>
+              {/* Logout Button - Mobile Dropdown (only show when authenticated) */}
+              {user && (
+                <button
+                  onClick={() => {
+                    closeMenu();
+                    handleLogout();
+                  }}
+                  disabled={isLoggingOut}
+                  className={cn(
+                    'w-full text-left block px-3 py-2 rounded-md text-base font-medium',
+                    'text-red-600 hover:text-red-700 hover:bg-red-50 disabled:opacity-50'
+                  )}
+                >
+                  <span className="flex items-center">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    {isLoggingOut ? 'Cerrando...' : 'Salir'}
+                  </span>
+                </button>
+              )}
             </div>
           </div>
         )}
