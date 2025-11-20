@@ -6,10 +6,21 @@
  */
 
 export const VERSION_INFO = {
-  version: '1.0.5',
-  release: '2025.11.19.001',
+  version: '1.0.6',
+  release: '2025.11.19.002',
   releaseDate: '2025-11-19',
   changelog: [
+    {
+      version: '1.0.6',
+      release: '2025.11.19.002',
+      date: '2025-11-19',
+      changes: [
+        'Fix: Remove duplicate version display from login page',
+        'Fix: Hide logout button on login page when no session exists',
+        'Fix: Resolve login redirect issue by listening to SIGNED_IN auth event',
+        'Fix: Calculate provision remaining balance (amount - expenses) instead of full amount',
+      ],
+    },
     {
       version: '1.0.5',
       release: '2025.11.19.001',
