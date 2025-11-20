@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { getCurrentVersion } from '@/lib/version';
 
 export default function LoginPage() {
   const supabase = createClient();
@@ -53,9 +54,12 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
-        <h1 className="text-3xl font-bold text-center mb-2 text-gray-900">
+        <h1 className="text-3xl font-bold text-center mb-1 text-gray-900">
           Budget Manager
         </h1>
+        <p className="text-center text-xs text-gray-500 font-mono mb-8">
+          {getCurrentVersion()}
+        </p>
         <p className="text-center text-gray-600 mb-8">
           Manage your finances with ease
         </p>
