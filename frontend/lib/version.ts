@@ -6,10 +6,19 @@
  */
 
 export const VERSION_INFO = {
-  version: '1.0.8',
-  release: '2025.11.19.004',
+  version: '1.0.9',
+  release: '2025.11.19.005',
   releaseDate: '2025-11-19',
   changelog: [
+    {
+      version: '1.0.9',
+      release: '2025.11.19.005',
+      date: '2025-11-19',
+      changes: [
+        'Debug: Add detailed logging to authentication flow to identify redirect issue after login',
+        'Logging added to AuthContext, LoginPage, and onAuthStateChange callbacks',
+      ],
+    },
     {
       version: '1.0.8',
       release: '2025.11.19.004',

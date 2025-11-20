@@ -42,6 +42,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Get initial session with timeout
     const getInitialSession = async () => {
       try {
+        console.log('[AuthContext] Getting initial session...');
         // Add timeout to prevent infinite loading
         const timeoutPromise = new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Session check timeout')), 10000)
@@ -53,11 +54,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           data: { session },
         } = await Promise.race([sessionPromise, timeoutPromise]) as any;
 
+        console.log('[AuthContext] Initial session retrieved:', {
+          hasSession: !!session,
+          sessionUser: session?.user?.email,
+          timestamp: new Date().toISOString(),
+        });
+
         if (mounted) {
           setUser(session?.user ?? null);
         }
       } catch (error) {
-        console.error('Error getting initial session:', error);
+        console.error('[AuthContext] Error getting initial session:', error);
         // Even on error, set loading to false to prevent infinite loading
         if (mounted) {
           setUser(null);
@@ -75,7 +82,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log('[AuthContext] Auth state change:', {
+        event: _event,
+        hasSession: !!session,
+        sessionUser: session?.user?.email,
+        mounted,
+        timestamp: new Date().toISOString(),
+      });
       if (mounted) {
+        console.log('[AuthContext] Setting user:', session?.user?.email ?? null);
         setUser(session?.user ?? null);
       }
     });

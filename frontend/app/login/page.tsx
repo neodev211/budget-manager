@@ -17,8 +17,16 @@ export default function LoginPage() {
 
   // Single effect to handle redirect - trust AuthContext for auth state
   useEffect(() => {
+    console.log('[LoginPage] Redirect effect check:', {
+      loading,
+      hasUser: !!user,
+      userEmail: user?.email,
+      timestamp: new Date().toISOString(),
+    });
+
     if (!loading && user) {
       // User is authenticated, redirect to dashboard
+      console.log('[LoginPage] User authenticated via context, redirecting to dashboard');
       router.push('/');
     }
   }, [user, loading, router]);
@@ -27,13 +35,23 @@ export default function LoginPage() {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('[LoginPage] Auth state change:', {
+          event,
+          hasSession: !!session,
+          sessionUser: session?.user?.email,
+          timestamp: new Date().toISOString(),
+        });
+
         if (event === 'SIGNED_IN' && session) {
           // User just signed in, redirect to dashboard immediately
+          console.log('[LoginPage] SIGNED_IN event detected, redirecting to dashboard');
           router.push('/');
         } else if (event === 'SIGNED_OUT') {
+          console.log('[LoginPage] SIGNED_OUT event detected');
           // Check localStorage for error messages from Supabase
           const error = localStorage.getItem('supabase.auth.error');
           if (error) {
+            console.log('[LoginPage] Auth error found:', error);
             setAuthError(error);
             localStorage.removeItem('supabase.auth.error');
           }
