@@ -162,6 +162,7 @@ export class PrismaProvisionRepository implements IProvisionRepository {
       ? (result._sum.amount as any).toNumber()
       : Number(result._sum.amount);
 
-    return amount;
+    // Return absolute value (positive number) because expenses are stored as negative
+    return Math.abs(amount);
   }
 }
