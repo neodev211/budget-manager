@@ -14,35 +14,19 @@ export default function LoginPage() {
   const [view, setView] = useState<'sign_in' | 'sign_up'>('sign_in');
   const [authError, setAuthError] = useState<string | null>(null);
 
-  // Listen for auth state changes to detect sign in
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
-          // User signed in successfully
-          setAuthError(null);
-          router.push('/');
-        } else if (event === 'USER_UPDATED') {
-          setAuthError(null);
-        }
-      }
-    );
-
-    return () => subscription?.unsubscribe();
-  }, [router, supabase.auth]);
-
-  // Redirect to home if already authenticated
+  // Single effect to handle redirect - trust AuthContext for auth state
   useEffect(() => {
     if (!loading && user) {
+      // User is authenticated, redirect to dashboard
       router.push('/');
     }
   }, [user, loading, router]);
 
-  // Listen for auth errors
+  // Listen for auth errors from Supabase
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === 'SIGNED_OUT' && !session) {
+      (event, _session) => {
+        if (event === 'SIGNED_OUT') {
           // Check localStorage for error messages from Supabase
           const error = localStorage.getItem('supabase.auth.error');
           if (error) {
