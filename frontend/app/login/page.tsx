@@ -33,6 +33,15 @@ export default function LoginPage() {
       const timer = setTimeout(() => {
         console.log('[LoginPage] Executing router.push("/") after 500ms delay');
         router.push('/');
+
+        // Add fallback: if router.push doesn't work, use window.location
+        setTimeout(() => {
+          console.log('[LoginPage] Fallback: checking if redirect worked, using window.location if needed');
+          if (typeof window !== 'undefined' && window.location.pathname === '/login') {
+            console.log('[LoginPage] Fallback redirect triggered - using window.location.href');
+            window.location.href = '/';
+          }
+        }, 1000);
       }, 500);
 
       return () => clearTimeout(timer);

@@ -6,10 +6,21 @@
  */
 
 export const VERSION_INFO = {
-  version: '1.1.1',
-  release: '2025.11.20.002',
+  version: '1.1.2',
+  release: '2025.11.20.003',
   releaseDate: '2025-11-20',
   changelog: [
+    {
+      version: '1.1.2',
+      release: '2025.11.20.003',
+      date: '2025-11-20',
+      changes: [
+        'Fix: Added fallback redirect mechanism using window.location.href',
+        'Diagnosis: router.push executes but page navigation may not complete in some cases',
+        'Solution: After 500ms router.push, wait 1s and check if still on /login, then use window.location',
+        'Result: Guarantees redirect to dashboard even if Next.js router fails to navigate',
+      ],
+    },
     {
       version: '1.1.1',
       release: '2025.11.20.002',
