@@ -105,6 +105,47 @@ export class TypeORMProvisionRepository implements IProvisionRepository {
     }));
   }
 
+  async findByIdWithUsedAmount(id: string): Promise<Provision | null> {
+    const provision = await this.findById(id);
+    if (!provision) return null;
+
+    const usedAmount = await this.calculateMaterializedAmount(id);
+    return { ...provision, usedAmount };
+  }
+
+  async findAllWithUsedAmount(): Promise<Provision[]> {
+    const provisions = await this.findAll();
+    const provisionsWithUsedAmount = await Promise.all(
+      provisions.map(async (prov) => ({
+        ...prov,
+        usedAmount: await this.calculateMaterializedAmount(prov.id),
+      }))
+    );
+    return provisionsWithUsedAmount;
+  }
+
+  async findByCategoryIdWithUsedAmount(categoryId: string): Promise<Provision[]> {
+    const provisions = await this.findByCategoryId(categoryId);
+    const provisionsWithUsedAmount = await Promise.all(
+      provisions.map(async (prov) => ({
+        ...prov,
+        usedAmount: await this.calculateMaterializedAmount(prov.id),
+      }))
+    );
+    return provisionsWithUsedAmount;
+  }
+
+  async findOpenProvisionsWithUsedAmount(): Promise<Provision[]> {
+    const provisions = await this.findOpenProvisions();
+    const provisionsWithUsedAmount = await Promise.all(
+      provisions.map(async (prov) => ({
+        ...prov,
+        usedAmount: await this.calculateMaterializedAmount(prov.id),
+      }))
+    );
+    return provisionsWithUsedAmount;
+  }
+
   async update(id: string, data: UpdateProvisionDTO): Promise<Provision> {
     const provision = await prisma.provision.update({
       where: { id },

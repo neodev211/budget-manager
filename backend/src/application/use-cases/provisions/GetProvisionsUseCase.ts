@@ -21,14 +21,14 @@ export class GetProvisionsUseCase {
     // Validar entrada si se proporciona
     if (input?.categoryId) {
       ValidationService.validateUUID(input.categoryId, 'categoryId');
-      return this.provisionRepository.findByCategoryId(input.categoryId);
+      return this.provisionRepository.findByCategoryIdWithUsedAmount(input.categoryId);
     }
 
     if (input?.onlyOpen) {
-      return this.provisionRepository.findOpenProvisions();
+      return this.provisionRepository.findOpenProvisionsWithUsedAmount();
     }
 
     // Si no hay filtros específicos, obtener todas
-    return this.provisionRepository.findAll();
+    return this.provisionRepository.findAllWithUsedAmount();
   }
 }

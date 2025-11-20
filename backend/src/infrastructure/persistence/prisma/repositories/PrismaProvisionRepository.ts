@@ -61,6 +61,73 @@ export class PrismaProvisionRepository implements IProvisionRepository {
     return prismaProvisions.map((prov: any) => ProvisionMapper.toDomain(prov));
   }
 
+  async findByIdWithUsedAmount(id: string): Promise<Provision | null> {
+    const prismaProvision = await prisma.provision.findUnique({
+      where: { id },
+    });
+
+    if (!prismaProvision) return null;
+
+    const provision = ProvisionMapper.toDomain(prismaProvision);
+    const usedAmount = await this.calculateMaterializedAmount(id);
+    provision.usedAmount = usedAmount;
+
+    return provision;
+  }
+
+  async findAllWithUsedAmount(): Promise<Provision[]> {
+    const prismaProvisions = await prisma.provision.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const provisionsWithUsedAmount = await Promise.all(
+      prismaProvisions.map(async (prov: any) => {
+        const provision = ProvisionMapper.toDomain(prov);
+        const usedAmount = await this.calculateMaterializedAmount(prov.id);
+        provision.usedAmount = usedAmount;
+        return provision;
+      })
+    );
+
+    return provisionsWithUsedAmount;
+  }
+
+  async findByCategoryIdWithUsedAmount(categoryId: string): Promise<Provision[]> {
+    const prismaProvisions = await prisma.provision.findMany({
+      where: { categoryId },
+      orderBy: { dueDate: 'asc' },
+    });
+
+    const provisionsWithUsedAmount = await Promise.all(
+      prismaProvisions.map(async (prov: any) => {
+        const provision = ProvisionMapper.toDomain(prov);
+        const usedAmount = await this.calculateMaterializedAmount(prov.id);
+        provision.usedAmount = usedAmount;
+        return provision;
+      })
+    );
+
+    return provisionsWithUsedAmount;
+  }
+
+  async findOpenProvisionsWithUsedAmount(): Promise<Provision[]> {
+    const prismaProvisions = await prisma.provision.findMany({
+      where: { status: 'OPEN' },
+      orderBy: { dueDate: 'asc' },
+    });
+
+    const provisionsWithUsedAmount = await Promise.all(
+      prismaProvisions.map(async (prov: any) => {
+        const provision = ProvisionMapper.toDomain(prov);
+        const usedAmount = await this.calculateMaterializedAmount(prov.id);
+        provision.usedAmount = usedAmount;
+        return provision;
+      })
+    );
+
+    return provisionsWithUsedAmount;
+  }
+
   async update(id: string, data: UpdateProvisionDTO): Promise<Provision> {
     const prismaProvision = await prisma.provision.update({
       where: { id },

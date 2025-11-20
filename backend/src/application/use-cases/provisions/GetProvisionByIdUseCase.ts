@@ -13,7 +13,7 @@ export class GetProvisionByIdUseCase {
   async execute(id: string): Promise<Provision> {
     ValidationService.validateUUID(id, 'provisionId');
 
-    const provision = await this.provisionRepository.findById(id);
+    const provision = await this.provisionRepository.findByIdWithUsedAmount(id);
 
     if (!provision) {
       throw new Error(`Provision with id "${id}" not found`);
