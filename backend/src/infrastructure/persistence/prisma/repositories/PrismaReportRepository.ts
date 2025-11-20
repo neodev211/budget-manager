@@ -33,46 +33,60 @@ export class PrismaReportRepository implements IReportRepository {
         },
         provisions: {
           where: { status: 'OPEN' },
-          select: { amount: true },
+          select: { id: true, amount: true },
         },
       },
     });
 
     // Process in-memory (fast computation)
-    const summaries: ExecutiveSummary[] = categories.map((category) => {
-      // Sum expenses for this category
-      const monthlySpent = Math.abs(
-        category.expenses.reduce((sum, expense) => {
-          return sum + this.toNumber(expense.amount);
-        }, 0)
-      );
+    const summaries: ExecutiveSummary[] = await Promise.all(
+      categories.map(async (category) => {
+        // Sum expenses for this category
+        const monthlySpent = Math.abs(
+          category.expenses.reduce((sum, expense) => {
+            return sum + this.toNumber(expense.amount);
+          }, 0)
+        );
 
-      // Sum open provisions for this category
-      const monthlyOpenProvisions = Math.abs(
-        category.provisions.reduce((sum, provision) => {
-          return sum + this.toNumber(provision.amount);
-        }, 0)
-      );
+        // Sum open provisions SALDO REMAINING (amount - used) for this category
+        let monthlyOpenProvisions = 0;
 
-      const monthlyBudget = this.toNumber(category.monthlyBudget);
-      const monthlyAvailable = monthlyBudget - monthlySpent - monthlyOpenProvisions;
+        // Calculate remaining balance for each provision
+        for (const provision of category.provisions) {
+          const provisionAmount = Math.abs(this.toNumber(provision.amount));
 
-      return {
-        categoryId: category.id,
-        categoryName: category.name,
-        period: category.period,
-        monthlyBudget,
-        monthlySpent,
-        monthlyOpenProvisions,
-        monthlyAvailable,
-        // Semester calculations
-        semesterBudget: monthlyBudget * 6,
-        semesterSpent: monthlySpent * 6,
-        semesterGrossAvailable: (monthlyBudget - monthlySpent) * 6,
-        semesterProvision: monthlyOpenProvisions * 6,
-        semesterRealAvailable: monthlyAvailable * 6,
-      };
-    });
+          // Get used amount for this provision from expenses linked to it
+          const usedAmount = await prisma.expense.aggregate({
+            where: { provisionId: provision.id },
+            _sum: { amount: true },
+          });
+
+          const usedTotal = Math.abs(this.toNumber(usedAmount._sum.amount));
+          const remainingBalance = provisionAmount - usedTotal;
+
+          monthlyOpenProvisions += remainingBalance;
+        }
+
+        const monthlyBudget = this.toNumber(category.monthlyBudget);
+        const monthlyAvailable = monthlyBudget - monthlySpent - monthlyOpenProvisions;
+
+        return {
+          categoryId: category.id,
+          categoryName: category.name,
+          period: category.period,
+          monthlyBudget,
+          monthlySpent,
+          monthlyOpenProvisions,
+          monthlyAvailable,
+          // Semester calculations
+          semesterBudget: monthlyBudget * 6,
+          semesterSpent: monthlySpent * 6,
+          semesterGrossAvailable: (monthlyBudget - monthlySpent) * 6,
+          semesterProvision: monthlyOpenProvisions * 6,
+          semesterRealAvailable: monthlyAvailable * 6,
+        };
+      })
+    );
 
     return summaries;
   }
@@ -88,7 +102,7 @@ export class PrismaReportRepository implements IReportRepository {
         },
         provisions: {
           where: { status: 'OPEN' },
-          select: { amount: true },
+          select: { id: true, amount: true },
         },
       },
     });
@@ -109,11 +123,24 @@ export class PrismaReportRepository implements IReportRepository {
       }, 0)
     );
 
-    const monthlyOpenProvisions = Math.abs(
-      category.provisions.reduce((sum, provision) => {
-        return sum + this.toNumber(provision.amount);
-      }, 0)
-    );
+    // Sum open provisions SALDO REMAINING (amount - used) for this category
+    let monthlyOpenProvisions = 0;
+
+    // Calculate remaining balance for each provision
+    for (const provision of category.provisions) {
+      const provisionAmount = Math.abs(this.toNumber(provision.amount));
+
+      // Get used amount for this provision from expenses linked to it
+      const usedAmount = await prisma.expense.aggregate({
+        where: { provisionId: provision.id },
+        _sum: { amount: true },
+      });
+
+      const usedTotal = Math.abs(this.toNumber(usedAmount._sum.amount));
+      const remainingBalance = provisionAmount - usedTotal;
+
+      monthlyOpenProvisions += remainingBalance;
+    }
 
     const monthlyBudget = this.toNumber(category.monthlyBudget);
     const monthlyAvailable = monthlyBudget - monthlySpent - monthlyOpenProvisions;

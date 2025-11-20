@@ -23,11 +23,14 @@ export default function LoginPage() {
     }
   }, [user, loading, router]);
 
-  // Listen for auth errors from Supabase
+  // Listen for auth state changes and errors
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, _session) => {
-        if (event === 'SIGNED_OUT') {
+      (event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          // User just signed in, redirect to dashboard immediately
+          router.push('/');
+        } else if (event === 'SIGNED_OUT') {
           // Check localStorage for error messages from Supabase
           const error = localStorage.getItem('supabase.auth.error');
           if (error) {
@@ -39,7 +42,7 @@ export default function LoginPage() {
     );
 
     return () => subscription?.unsubscribe();
-  }, [supabase.auth]);
+  }, [supabase.auth, router]);
 
   if (loading) {
     return (
@@ -54,12 +57,9 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
-        <h1 className="text-3xl font-bold text-center mb-1 text-gray-900">
+        <h1 className="text-3xl font-bold text-center mb-2 text-gray-900">
           Budget Manager
         </h1>
-        <p className="text-center text-xs text-gray-500 font-mono mb-8">
-          {getCurrentVersion()}
-        </p>
         <p className="text-center text-gray-600 mb-8">
           Manage your finances with ease
         </p>
