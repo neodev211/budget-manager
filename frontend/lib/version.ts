@@ -6,10 +6,18 @@
  */
 
 export const VERSION_INFO = {
-  version: '1.0.6',
-  release: '2025.11.19.002',
+  version: '1.0.7',
+  release: '2025.11.19.003',
   releaseDate: '2025-11-19',
   changelog: [
+    {
+      version: '1.0.7',
+      release: '2025.11.19.003',
+      date: '2025-11-19',
+      changes: [
+        'Fix: Return usedAmount as positive number in provision calculations',
+      ],
+    },
     {
       version: '1.0.6',
       release: '2025.11.19.002',
