@@ -34,7 +34,8 @@
     "inversify": "^6.0.2",
     "prisma": "^6.19.0",
     "reflect-metadata": "^0.2.2",
-    "typeorm": "^0.3.27"
+    "typeorm": "^0.3.27",
+    "winston": "^3.18.3"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

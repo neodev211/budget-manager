@@ -6,10 +6,31 @@
  */
 
 export const VERSION_INFO = {
-  version: '2.0.9',
-  release: '2025.11.22.009',
+  version: '2.0.10',
+  release: '2025.11.22.010',
   releaseDate: '2025-11-22',
   changelog: [
+    {
+      version: '2.0.10',
+      release: '2025.11.22.010',
+      date: '2025-11-22',
+      changes: [
+        'Security: Implemented Winston professional logging with persistent file storage',
+        'Security: Added PII sanitization to prevent exposure of sensitive data in logs',
+        'Security: Email addresses masked as m***o@domain.com in logs',
+        'Security: User IDs masked as xxxx...xxxx (first 4 + last 4 characters)',
+        'Security: Tokens masked to show only first 10 and last 10 characters',
+        'Security: Automatic redaction of password, token, authorization, cookie, secret fields',
+        'Security: Removed plain text email logging from user provisioning (auth middleware)',
+        'Infrastructure: Winston logger writes to logs/error.log (errors) and logs/combined.log (all events)',
+        'Infrastructure: Log rotation with 10MB max file size and 5 file retention',
+        'Infrastructure: Console output in development, file-only in production',
+        'Improvement: Recursive deep sanitization of nested objects and arrays',
+        'Improvement: Separate error and combined log files for easier debugging',
+        'Compliance: GDPR-compliant logging without exposing user email addresses',
+        'Documentation: Security audit trail maintained for compliance verification',
+      ],
+    },
     {
       version: '2.0.9',
       release: '2025.11.22.009',

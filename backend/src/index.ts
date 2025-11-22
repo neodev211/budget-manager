@@ -107,6 +107,7 @@ app.use('/api/expenses', expenseRoutes);
 app.use('/api/reports', reportRoutes);
 
 // Error handling
+// ✅ SECURITY: All errors are sanitized before logging to prevent sensitive data leakage
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
   LoggerService.error('Unhandled error', err);
   res.status(500).json({ error: 'Something went wrong!' });

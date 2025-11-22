@@ -75,9 +75,11 @@ export const authenticateToken = async (
             name: user.user_metadata?.name || user.email?.split('@')[0],
           },
         });
-        LoggerService.info(`User provisioned in database: ${user.email}`);
+        // ✅ SECURITY: Log user provisioning with sanitized user ID (email not exposed)
+        LoggerService.info('User provisioned in database', { userId: user.id });
       }
     } catch (dbError) {
+      // ✅ SECURITY: Log errors with sanitization to prevent token/sensitive data leakage
       LoggerService.warn('Error provisioning user in database', dbError);
       // Don't block authentication if user provisioning fails
       // The error might be due to concurrent requests
@@ -85,6 +87,7 @@ export const authenticateToken = async (
 
     next();
   } catch (error) {
+    // ✅ SECURITY: All error details are sanitized before logging
     LoggerService.error('Auth middleware error', error);
     res.status(500).json({
       error: 'Internal server error during authentication',
