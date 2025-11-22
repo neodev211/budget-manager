@@ -113,6 +113,7 @@ export class PrismaExpenseRepository implements IExpenseRepository {
           ...(data.description && { description: data.description }),
           ...(data.amount !== undefined && { amount: data.amount }),
           ...(data.paymentMethod && { paymentMethod: data.paymentMethod }),
+          ...(data.categoryId && { categoryId: data.categoryId }), // ✅ FIXED: Add categoryId update support
           ...(data.provisionId !== undefined && { provisionId: data.provisionId }),
         },
       });

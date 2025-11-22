@@ -181,6 +181,7 @@ export class ExpenseController {
   /**
    * PUT /api/expenses/:id
    * Update an expense (must belong to authenticated user's category)
+   * SECURITY: Validates ownership of both existing and new category/provision
    */
   async update(req: Request, res: Response): Promise<void> {
     try {
@@ -201,6 +202,36 @@ export class ExpenseController {
       if (!category || category.userId !== authReq.userId) {
         res.status(403).json({ error: 'Forbidden: This expense does not belong to you' });
         return;
+      }
+
+      // ✅ SECURITY FIX: Validate ownership of NEW category if changing it
+      if (req.body.categoryId && req.body.categoryId !== existingExpense.categoryId) {
+        const newCategory = await categoryUseCase.execute(req.body.categoryId);
+        if (!newCategory) {
+          res.status(404).json({ error: 'New category not found' });
+          return;
+        }
+        if (newCategory.userId !== authReq.userId) {
+          res.status(403).json({ error: 'Forbidden: The new category does not belong to you' });
+          return;
+        }
+      }
+
+      // ✅ SECURITY FIX: Validate ownership of NEW provision if changing it
+      if (req.body.provisionId && req.body.provisionId !== existingExpense.provisionId) {
+        const provisionUseCase = DIContainer.getGetProvisionByIdUseCase();
+        const newProvision = await provisionUseCase.execute(req.body.provisionId);
+
+        if (!newProvision) {
+          res.status(404).json({ error: 'New provision not found' });
+          return;
+        }
+
+        const provisionCategory = await categoryUseCase.execute(newProvision.categoryId);
+        if (!provisionCategory || provisionCategory.userId !== authReq.userId) {
+          res.status(403).json({ error: 'Forbidden: The new provision does not belong to you' });
+          return;
+        }
       }
 
       // Proceed with update
