@@ -1,16 +1,37 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { ProvisionController } from '../controllers/ProvisionController';
+import {
+  validateProvisionInput,
+  handleValidationErrors,
+  sanitizeRequestBody,
+} from '../../infrastructure/middleware/sanitizationMiddleware';
 
 const router = Router();
 const controller = new ProvisionController();
 
-router.post('/', (req, res) => controller.create(req, res));
-router.post('/bulk-copy', (req, res) => controller.bulkCopyToCategory(req, res));
-router.post('/:id/copy', (req, res) => controller.copyToCategory(req, res));
-router.get('/', (req, res) => controller.findAll(req, res));
-router.get('/:id', (req, res) => controller.findById(req, res));
-router.get('/:id/materialized', (req, res) => controller.getMaterializedAmount(req, res));
-router.put('/:id', (req, res) => controller.update(req, res));
-router.delete('/:id', (req, res) => controller.delete(req, res));
+// ✅ SECURITY: Validate and sanitize inputs on POST (create) and PUT (update) operations
+router.post(
+  '/',
+  validateProvisionInput,
+  handleValidationErrors,
+  sanitizeRequestBody,
+  (req: Request, res: Response) => controller.create(req, res)
+);
+
+router.post('/bulk-copy', (req: Request, res: Response) => controller.bulkCopyToCategory(req, res));
+router.post('/:id/copy', (req: Request, res: Response) => controller.copyToCategory(req, res));
+router.get('/', (req: Request, res: Response) => controller.findAll(req, res));
+router.get('/:id', (req: Request, res: Response) => controller.findById(req, res));
+router.get('/:id/materialized', (req: Request, res: Response) => controller.getMaterializedAmount(req, res));
+
+router.put(
+  '/:id',
+  validateProvisionInput,
+  handleValidationErrors,
+  sanitizeRequestBody,
+  (req: Request, res: Response) => controller.update(req, res)
+);
+
+router.delete('/:id', (req: Request, res: Response) => controller.delete(req, res));
 
 export default router;

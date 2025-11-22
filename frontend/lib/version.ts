@@ -6,10 +6,37 @@
  */
 
 export const VERSION_INFO = {
-  version: '2.0.10',
-  release: '2025.11.22.010',
+  version: '2.0.11',
+  release: '2025.11.22.011',
   releaseDate: '2025-11-22',
   changelog: [
+    {
+      version: '2.0.11',
+      release: '2025.11.22.011',
+      date: '2025-11-22',
+      changes: [
+        'Security: Implemented comprehensive input validation and sanitization',
+        'Security: Integrated express-validator for schema-based input validation',
+        'Security: Added isomorphic-dompurify for HTML tag removal and XSS prevention',
+        'Security: Created sanitization middleware for all API endpoints',
+        'Security: Validates and sanitizes expense data (description, amount, notes)',
+        'Security: Validates and sanitizes provision data (description, amount, notes)',
+        'Security: Validates and sanitizes category data (name, budget, description)',
+        'Security: Detects and blocks XSS injection patterns (<script>, event handlers, etc.)',
+        'Security: Protects against NoSQL injection with field validation',
+        'Security: Prevents prototype pollution attacks (__proto__, constructor, prototype)',
+        'Security: Sanitizes input recursively for nested objects and arrays',
+        'Security: Applied validation to all POST and PUT operations on /api/categories, /api/provisions, /api/expenses',
+        'Security: Blocks dangerous control characters and suspicious patterns',
+        'Validation: Length constraints on all string fields (descriptions max 500-1000 chars)',
+        'Validation: Amount fields require positive numbers',
+        'Validation: Date fields validated as ISO 8601 format',
+        'Validation: Custom error responses for validation failures',
+        'Infrastructure: Validation errors logged as security events',
+        'Improvement: Centralized SanitizationUtil class for reusable sanitization logic',
+        'Documentation: Comprehensive Javadoc comments for all sanitization functions',
+      ],
+    },
     {
       version: '2.0.10',
       release: '2025.11.22.010',
