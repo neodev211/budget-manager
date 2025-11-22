@@ -13,7 +13,8 @@ export class GetProvisionByIdUseCase {
   async execute(id: string): Promise<Provision> {
     ValidationService.validateUUID(id, 'provisionId');
 
-    const provision = await this.provisionRepository.findByIdWithUsedAmount(id);
+    // ✅ MATERIALIZED: usedAmount now comes directly from DB, no separate query needed
+    const provision = await this.provisionRepository.findById(id);
 
     if (!provision) {
       throw new Error(`Provision with id "${id}" not found`);

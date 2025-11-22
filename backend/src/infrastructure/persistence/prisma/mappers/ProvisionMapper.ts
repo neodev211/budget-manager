@@ -46,7 +46,7 @@ export class ProvisionMapper {
       item: prismaProvision.item,
       categoryId: prismaProvision.categoryId,
       amount: Money.fromDecimal(prismaProvision.amount).value,
-      usedAmount: undefined, // Calculado en use cases, no en mappers
+      usedAmount: Money.fromDecimal(prismaProvision.usedAmount).value, // ✅ MATERIALIZED: Now from DB
       dueDate: prismaProvision.dueDate,
       status: this.statusToDomain(prismaProvision.status),
       notes: prismaProvision.notes || undefined,
@@ -74,6 +74,7 @@ export class ProvisionMapper {
       item: provision.item,
       categoryId: provision.categoryId,
       amount: provision.amount as any, // Prisma manejará la conversión a Decimal
+      usedAmount: provision.usedAmount as any, // ✅ MATERIALIZED: Include usedAmount in persistence
       dueDate: provision.dueDate,
       status: this.statusToPersistence(provision.status),
       notes: provision.notes || null,

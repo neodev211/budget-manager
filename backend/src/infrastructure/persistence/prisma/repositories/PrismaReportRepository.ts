@@ -33,7 +33,7 @@ export class PrismaReportRepository implements IReportRepository {
         },
         provisions: {
           where: { status: 'OPEN' },
-          select: { id: true, amount: true },
+          select: { id: true, amount: true, usedAmount: true }, // ✅ MATERIALIZED: Get usedAmount from DB
         },
       },
     });
@@ -49,19 +49,13 @@ export class PrismaReportRepository implements IReportRepository {
         );
 
         // Sum open provisions SALDO REMAINING (amount - used) for this category
+        // ✅ MATERIALIZED: Use stored usedAmount instead of N+1 queries
         let monthlyOpenProvisions = 0;
 
         // Calculate remaining balance for each provision
         for (const provision of category.provisions) {
           const provisionAmount = Math.abs(this.toNumber(provision.amount));
-
-          // Get used amount for this provision from expenses linked to it
-          const usedAmount = await prisma.expense.aggregate({
-            where: { provisionId: provision.id },
-            _sum: { amount: true },
-          });
-
-          const usedTotal = Math.abs(this.toNumber(usedAmount._sum.amount));
+          const usedTotal = Math.abs(this.toNumber(provision.usedAmount)); // ✅ From DB (cached)
           const remainingBalance = provisionAmount - usedTotal;
 
           monthlyOpenProvisions += remainingBalance;
@@ -102,7 +96,7 @@ export class PrismaReportRepository implements IReportRepository {
         },
         provisions: {
           where: { status: 'OPEN' },
-          select: { id: true, amount: true },
+          select: { id: true, amount: true, usedAmount: true }, // ✅ MATERIALIZED: Get usedAmount from DB
         },
       },
     });
@@ -124,19 +118,13 @@ export class PrismaReportRepository implements IReportRepository {
     );
 
     // Sum open provisions SALDO REMAINING (amount - used) for this category
+    // ✅ MATERIALIZED: Use stored usedAmount instead of N+1 queries
     let monthlyOpenProvisions = 0;
 
     // Calculate remaining balance for each provision
     for (const provision of category.provisions) {
       const provisionAmount = Math.abs(this.toNumber(provision.amount));
-
-      // Get used amount for this provision from expenses linked to it
-      const usedAmount = await prisma.expense.aggregate({
-        where: { provisionId: provision.id },
-        _sum: { amount: true },
-      });
-
-      const usedTotal = Math.abs(this.toNumber(usedAmount._sum.amount));
+      const usedTotal = Math.abs(this.toNumber(provision.usedAmount)); // ✅ From DB (cached)
       const remainingBalance = provisionAmount - usedTotal;
 
       monthlyOpenProvisions += remainingBalance;

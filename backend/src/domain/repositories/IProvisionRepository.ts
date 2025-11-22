@@ -6,11 +6,10 @@ export interface IProvisionRepository {
   findAll(): Promise<Provision[]>;
   findByCategoryId(categoryId: string): Promise<Provision[]>;
   findOpenProvisions(): Promise<Provision[]>;
-  findByIdWithUsedAmount(id: string): Promise<Provision | null>;
-  findAllWithUsedAmount(): Promise<Provision[]>;
-  findByCategoryIdWithUsedAmount(categoryId: string): Promise<Provision[]>;
-  findOpenProvisionsWithUsedAmount(): Promise<Provision[]>;
   update(id: string, data: UpdateProvisionDTO): Promise<Provision>;
   delete(id: string): Promise<void>;
+  // ✅ MATERIALIZED: usedAmount is now part of Provision entity, no need for separate queries
+  updateUsedAmount(provisionId: string, usedAmount: number): Promise<void>;
+  // Validation: Calculate and compare materialized amount vs stored
   calculateMaterializedAmount(provisionId: string): Promise<number>;
 }

@@ -18,17 +18,18 @@ export class GetProvisionsUseCase {
     categoryId?: string;
     onlyOpen?: boolean;
   }): Promise<Provision[]> {
+    // ✅ MATERIALIZED: usedAmount now comes directly from DB, no separate queries needed
     // Validar entrada si se proporciona
     if (input?.categoryId) {
       ValidationService.validateUUID(input.categoryId, 'categoryId');
-      return this.provisionRepository.findByCategoryIdWithUsedAmount(input.categoryId);
+      return this.provisionRepository.findByCategoryId(input.categoryId);
     }
 
     if (input?.onlyOpen) {
-      return this.provisionRepository.findOpenProvisionsWithUsedAmount();
+      return this.provisionRepository.findOpenProvisions();
     }
 
     // Si no hay filtros específicos, obtener todas
-    return this.provisionRepository.findAllWithUsedAmount();
+    return this.provisionRepository.findAll();
   }
 }

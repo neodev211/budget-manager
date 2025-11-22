@@ -54,6 +54,7 @@ model Provision {
   item       String
   categoryId String   @map("category_id")
   amount     Decimal  @db.Decimal(10, 2) // Siempre negativo
+  usedAmount Decimal  @default(0) @map("used_amount") @db.Decimal(10, 2) // ✅ MATERIALIZED: Sum of linked expenses (cached)
   dueDate    DateTime @map("due_date")
   status     ProvisionStatus @default(OPEN)
   notes      String?

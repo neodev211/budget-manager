@@ -15,6 +15,7 @@ export class TypeORMProvisionRepository implements IProvisionRepository {
         item: data.item,
         amount: data.amount,
         categoryId: data.categoryId,
+        usedAmount: 0, // ✅ MATERIALIZED: Initialize to 0
         dueDate: data.dueDate,
         notes: data.notes,
       },
@@ -24,6 +25,7 @@ export class TypeORMProvisionRepository implements IProvisionRepository {
       id: provision.id,
       item: provision.item,
       amount: Number(provision.amount),
+      usedAmount: Number(provision.usedAmount), // ✅ MATERIALIZED: From DB
       categoryId: provision.categoryId,
       dueDate: provision.dueDate,
       status: provision.status as ProvisionStatus,
@@ -40,6 +42,7 @@ export class TypeORMProvisionRepository implements IProvisionRepository {
       id: prov.id,
       item: prov.item,
       amount: Number(prov.amount),
+      usedAmount: Number(prov.usedAmount), // ✅ MATERIALIZED: From DB
       categoryId: prov.categoryId,
       dueDate: prov.dueDate,
       status: prov.status as ProvisionStatus,
@@ -60,6 +63,7 @@ export class TypeORMProvisionRepository implements IProvisionRepository {
       id: provision.id,
       item: provision.item,
       amount: Number(provision.amount),
+      usedAmount: Number(provision.usedAmount), // ✅ MATERIALIZED: From DB
       categoryId: provision.categoryId,
       dueDate: provision.dueDate,
       status: provision.status as ProvisionStatus,
@@ -78,6 +82,7 @@ export class TypeORMProvisionRepository implements IProvisionRepository {
       id: prov.id,
       item: prov.item,
       amount: Number(prov.amount),
+      usedAmount: Number(prov.usedAmount), // ✅ MATERIALIZED: From DB
       categoryId: prov.categoryId,
       dueDate: prov.dueDate,
       status: prov.status as ProvisionStatus,
@@ -96,6 +101,7 @@ export class TypeORMProvisionRepository implements IProvisionRepository {
       id: prov.id,
       item: prov.item,
       amount: Number(prov.amount),
+      usedAmount: Number(prov.usedAmount), // ✅ MATERIALIZED: From DB
       categoryId: prov.categoryId,
       dueDate: prov.dueDate,
       status: prov.status as ProvisionStatus,
@@ -103,47 +109,6 @@ export class TypeORMProvisionRepository implements IProvisionRepository {
       createdAt: prov.createdAt,
       updatedAt: prov.updatedAt,
     }));
-  }
-
-  async findByIdWithUsedAmount(id: string): Promise<Provision | null> {
-    const provision = await this.findById(id);
-    if (!provision) return null;
-
-    const usedAmount = await this.calculateMaterializedAmount(id);
-    return { ...provision, usedAmount };
-  }
-
-  async findAllWithUsedAmount(): Promise<Provision[]> {
-    const provisions = await this.findAll();
-    const provisionsWithUsedAmount = await Promise.all(
-      provisions.map(async (prov) => ({
-        ...prov,
-        usedAmount: await this.calculateMaterializedAmount(prov.id),
-      }))
-    );
-    return provisionsWithUsedAmount;
-  }
-
-  async findByCategoryIdWithUsedAmount(categoryId: string): Promise<Provision[]> {
-    const provisions = await this.findByCategoryId(categoryId);
-    const provisionsWithUsedAmount = await Promise.all(
-      provisions.map(async (prov) => ({
-        ...prov,
-        usedAmount: await this.calculateMaterializedAmount(prov.id),
-      }))
-    );
-    return provisionsWithUsedAmount;
-  }
-
-  async findOpenProvisionsWithUsedAmount(): Promise<Provision[]> {
-    const provisions = await this.findOpenProvisions();
-    const provisionsWithUsedAmount = await Promise.all(
-      provisions.map(async (prov) => ({
-        ...prov,
-        usedAmount: await this.calculateMaterializedAmount(prov.id),
-      }))
-    );
-    return provisionsWithUsedAmount;
   }
 
   async update(id: string, data: UpdateProvisionDTO): Promise<Provision> {
@@ -162,6 +127,7 @@ export class TypeORMProvisionRepository implements IProvisionRepository {
       id: provision.id,
       item: provision.item,
       amount: Number(provision.amount),
+      usedAmount: Number(provision.usedAmount), // ✅ MATERIALIZED: From DB
       categoryId: provision.categoryId,
       dueDate: provision.dueDate,
       status: provision.status as ProvisionStatus,
@@ -174,6 +140,14 @@ export class TypeORMProvisionRepository implements IProvisionRepository {
   async delete(id: string): Promise<void> {
     await prisma.provision.delete({
       where: { id },
+    });
+  }
+
+  async updateUsedAmount(provisionId: string, usedAmount: number): Promise<void> {
+    // ✅ MATERIALIZED: Update cached usedAmount in DB
+    await prisma.provision.update({
+      where: { id: provisionId },
+      data: { usedAmount },
     });
   }
 
@@ -203,6 +177,7 @@ export class TypeORMProvisionRepository implements IProvisionRepository {
         item: provision.item,
         amount: provision.amount,
         categoryId: targetCategoryId,
+        usedAmount: 0, // ✅ MATERIALIZED: Initialize to 0 for new copy
         dueDate: provision.dueDate,
         notes: provision.notes,
       },
@@ -212,6 +187,7 @@ export class TypeORMProvisionRepository implements IProvisionRepository {
       id: copied.id,
       item: copied.item,
       amount: Number(copied.amount),
+      usedAmount: Number(copied.usedAmount), // ✅ MATERIALIZED: From DB
       categoryId: copied.categoryId,
       dueDate: copied.dueDate,
       status: copied.status as ProvisionStatus,
@@ -236,6 +212,7 @@ export class TypeORMProvisionRepository implements IProvisionRepository {
             item: prov.item,
             amount: prov.amount,
             categoryId: targetCategoryId,
+            usedAmount: 0, // ✅ MATERIALIZED: Initialize to 0 for new copy
             dueDate: prov.dueDate,
             notes: prov.notes,
           },
@@ -247,6 +224,7 @@ export class TypeORMProvisionRepository implements IProvisionRepository {
       id: prov.id,
       item: prov.item,
       amount: Number(prov.amount),
+      usedAmount: Number(prov.usedAmount), // ✅ MATERIALIZED: From DB
       categoryId: prov.categoryId,
       dueDate: prov.dueDate,
       status: prov.status as ProvisionStatus,

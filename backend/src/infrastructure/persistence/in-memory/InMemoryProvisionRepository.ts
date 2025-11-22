@@ -27,6 +27,7 @@ export class InMemoryProvisionRepository implements IProvisionRepository {
       item: data.item,
       categoryId: data.categoryId,
       amount: data.amount,
+      usedAmount: 0, // ✅ MATERIALIZED: Initialize to 0
       dueDate: data.dueDate,
       status: ProvisionStatus.OPEN,
       notes: data.notes,
@@ -58,44 +59,6 @@ export class InMemoryProvisionRepository implements IProvisionRepository {
     );
   }
 
-  async findByIdWithUsedAmount(id: string): Promise<Provision | null> {
-    const provision = await this.findById(id);
-    if (!provision) return null;
-
-    const usedAmount = await this.calculateMaterializedAmount(id);
-    return { ...provision, usedAmount };
-  }
-
-  async findAllWithUsedAmount(): Promise<Provision[]> {
-    const provisions = await this.findAll();
-    return Promise.all(
-      provisions.map(async (prov) => ({
-        ...prov,
-        usedAmount: await this.calculateMaterializedAmount(prov.id),
-      }))
-    );
-  }
-
-  async findByCategoryIdWithUsedAmount(categoryId: string): Promise<Provision[]> {
-    const provisions = await this.findByCategoryId(categoryId);
-    return Promise.all(
-      provisions.map(async (prov) => ({
-        ...prov,
-        usedAmount: await this.calculateMaterializedAmount(prov.id),
-      }))
-    );
-  }
-
-  async findOpenProvisionsWithUsedAmount(): Promise<Provision[]> {
-    const provisions = await this.findOpenProvisions();
-    return Promise.all(
-      provisions.map(async (prov) => ({
-        ...prov,
-        usedAmount: await this.calculateMaterializedAmount(prov.id),
-      }))
-    );
-  }
-
   async update(id: string, data: UpdateProvisionDTO): Promise<Provision> {
     const provision = this.provisions.get(id);
     if (!provision) {
@@ -117,6 +80,14 @@ export class InMemoryProvisionRepository implements IProvisionRepository {
       throw new Error(`Provision with id "${id}" not found`);
     }
     this.provisions.delete(id);
+  }
+
+  async updateUsedAmount(provisionId: string, usedAmount: number): Promise<void> {
+    // ✅ MATERIALIZED: Update cached usedAmount in memory
+    const provision = this.provisions.get(provisionId);
+    if (provision) {
+      provision.usedAmount = usedAmount;
+    }
   }
 
   async calculateMaterializedAmount(provisionId: string): Promise<number> {
