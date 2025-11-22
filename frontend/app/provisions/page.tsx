@@ -8,6 +8,8 @@ import Select from '@/components/ui/Select';
 import FilterBar from '@/components/FilterBar';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
+import { FormPreview, BudgetImpact } from '@/components/FormPreview';
+import { BudgetBar } from '@/components/ui/BudgetBar';
 import { provisionService } from '@/services/provisionService';
 import { categoryService } from '@/services/categoryService';
 import { Provision, CreateProvisionDTO, Category, ProvisionStatus } from '@/types';
@@ -320,6 +322,65 @@ export default function ProvisionsPage() {
   // Calcular monto usado (gastos asociados a la provisión)
   const getUsedAmount = (provision: Provision) => {
     return Math.abs(provision.usedAmount || 0);
+  };
+
+  // Get provision preview data for FormPreview component
+  const getProvisionPreview = (): BudgetImpact[] => {
+    if (!formData.categoryId || formData.amount <= 0) return [];
+
+    const category = categories.find(c => c.id === formData.categoryId);
+    if (!category) return [];
+
+    // Calculate current total provisions in this category
+    const categoryProvisions = provisions.filter(p =>
+      p.categoryId === formData.categoryId && p.status === ProvisionStatus.OPEN
+    );
+    const currentProvisioned = categoryProvisions.reduce((sum, p) => sum + Math.abs(p.amount), 0);
+
+    // Calculate after adding new provision
+    const afterProvisioned = currentProvisioned + Math.abs(formData.amount);
+
+    return [{
+      label: `Categoría: ${category.name}`,
+      current: currentProvisioned,
+      budget: category.monthlyBudget,
+      after: afterProvisioned
+    }];
+  };
+
+  // Get warnings for provision creation
+  const getProvisionWarnings = (): string[] => {
+    const warnings: string[] = [];
+
+    if (formData.amount === 0) {
+      warnings.push('El monto de la provisión es 0. Ingresa un monto válido.');
+    }
+
+    if (!formData.categoryId || formData.amount <= 0) return warnings;
+
+    const category = categories.find(c => c.id === formData.categoryId);
+    if (!category) return warnings;
+
+    const categoryProvisions = provisions.filter(p =>
+      p.categoryId === formData.categoryId && p.status === ProvisionStatus.OPEN
+    );
+    const currentProvisioned = categoryProvisions.reduce((sum, p) => sum + Math.abs(p.amount), 0);
+    const afterProvisioned = currentProvisioned + Math.abs(formData.amount);
+
+    // Check if will exceed budget
+    if (afterProvisioned > category.monthlyBudget) {
+      const excess = afterProvisioned - category.monthlyBudget;
+      warnings.push(`Esta provisión excederá el presupuesto de la categoría por ${formatCurrency(excess)}.`);
+    }
+
+    // Check if less than 10% budget remaining
+    const remainingBudget = category.monthlyBudget - afterProvisioned;
+    const remainingPercentage = (remainingBudget / category.monthlyBudget) * 100;
+    if (remainingPercentage > 0 && remainingPercentage < 10) {
+      warnings.push(`Después de esta provisión, solo quedará ${remainingPercentage.toFixed(1)}% del presupuesto disponible (${formatCurrency(remainingBudget)}).`);
+    }
+
+    return warnings;
   };
 
   const getFilteredProvisions = () => {
@@ -677,6 +738,16 @@ export default function ProvisionsPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* FormPreview - Show impact preview when category and amount are set */}
+              {!editingId && formData.categoryId && formData.amount > 0 && (
+                <FormPreview
+                  title="Vista previa del impacto"
+                  impacts={getProvisionPreview()}
+                  warnings={getProvisionWarnings()}
+                  showComparison={true}
+                />
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
                   ref={itemInputRef}

@@ -8,6 +8,8 @@ import Select from '@/components/ui/Select';
 import FilterBar from '@/components/FilterBar';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
+import { FormPreview, BudgetImpact } from '@/components/FormPreview';
+import { BudgetBar } from '@/components/ui/BudgetBar';
 import { expenseService } from '@/services/expenseService';
 import { categoryService } from '@/services/categoryService';
 import { provisionService } from '@/services/provisionService';
@@ -303,16 +305,28 @@ export default function ExpensesPage() {
     const warnings: string[] = [];
     const amount = Math.abs(formData.amount);
 
-    if (!formData.categoryId || amount === 0) return warnings;
+    if (amount === 0) {
+      warnings.push('El monto del gasto debe ser mayor a 0');
+      return warnings;
+    }
+
+    if (!formData.categoryId) return warnings;
 
     const categoryBalance = getCategoryBalance(formData.categoryId);
     const remainingAfter = categoryBalance - amount;
     const category = categories.find(c => c.id === formData.categoryId);
 
+    // Warning si el balance será negativo
+    if (remainingAfter < 0) {
+      warnings.push(
+        `El gasto excederá el saldo de la categoría por ${formatCurrency(Math.abs(remainingAfter))}`
+      );
+    }
+
     // Warning si queda < 10% del presupuesto de la categoría
     if (remainingAfter >= 0 && category && remainingAfter < (category.monthlyBudget || 0) * 0.1) {
       warnings.push(
-        `⚠️ Después de este gasto solo quedarán ${formatCurrency(remainingAfter)} disponibles (< 10% del presupuesto de ${category.name})`
+        `Después de este gasto solo quedarán ${formatCurrency(remainingAfter)} disponibles (menos del 10% del presupuesto)`
       );
     }
 
@@ -322,18 +336,67 @@ export default function ExpensesPage() {
       const provisionRemainingAfter = provisionBalance - amount;
       const provision = provisions.find(p => p.id === formData.provisionId);
 
+      // Warning si el balance de provisión será negativo
+      if (provisionRemainingAfter < 0) {
+        warnings.push(
+          `El gasto excederá el saldo de la provisión por ${formatCurrency(Math.abs(provisionRemainingAfter))}`
+        );
+      }
+
+      // Warning si queda < 10% del presupuesto de la provisión
       if (
         provisionRemainingAfter >= 0 &&
         provision &&
         provisionRemainingAfter < Math.abs(provision.amount || 0) * 0.1
       ) {
         warnings.push(
-          `⚠️ Después de este gasto solo quedarán ${formatCurrency(provisionRemainingAfter)} en la provisión "${provision.item}" (< 10%)`
+          `Después de este gasto solo quedarán ${formatCurrency(provisionRemainingAfter)} en la provisión (menos del 10%)`
         );
       }
     }
 
     return warnings;
+  };
+
+  // Obtener vista previa del impacto en presupuestos
+  const getExpensePreview = (): BudgetImpact[] => {
+    const impacts: BudgetImpact[] = [];
+    const amount = Math.abs(formData.amount);
+
+    if (!formData.categoryId || amount === 0) return impacts;
+
+    // Impacto en categoría
+    const category = categories.find(c => c.id === formData.categoryId);
+    if (category) {
+      const categoryExpenses = expenses.filter(e => e.categoryId === category.id);
+      const currentSpending = categoryExpenses.reduce((sum, e) => sum + Math.abs(e.amount), 0);
+      const afterSpending = currentSpending + amount;
+
+      impacts.push({
+        label: `Categoría: ${category.name}`,
+        current: currentSpending,
+        budget: category.monthlyBudget,
+        after: afterSpending
+      });
+    }
+
+    // Impacto en provisión (si está seleccionada)
+    if (formData.provisionId) {
+      const provision = provisions.find(p => p.id === formData.provisionId);
+      if (provision) {
+        const currentUsed = Math.abs(provision.usedAmount || 0);
+        const afterUsed = currentUsed + amount;
+
+        impacts.push({
+          label: `Provisión: ${provision.item}`,
+          current: currentUsed,
+          budget: Math.abs(provision.amount),
+          after: afterUsed
+        });
+      }
+    }
+
+    return impacts;
   };
 
   // Filtrar provisiones abiertas de la categoría seleccionada
@@ -614,6 +677,18 @@ export default function ExpensesPage() {
             <CardTitle>{editingId ? 'Editar Gasto' : 'Registrar Gasto (3 campos obligatorios)'}</CardTitle>
           </CardHeader>
           <CardContent>
+            {/* FormPreview Component */}
+            {formData.categoryId && formData.amount > 0 && (
+              <div className="mb-6">
+                <FormPreview
+                  title="Vista Previa del Gasto"
+                  impacts={getExpensePreview()}
+                  warnings={getExpenseWarnings()}
+                  showComparison={true}
+                />
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Campo 1: Monto */}

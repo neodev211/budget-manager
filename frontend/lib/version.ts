@@ -6,10 +6,29 @@
  */
 
 export const VERSION_INFO = {
-  version: '2.0.6',
-  release: '2025.11.22.006',
+  version: '2.0.7',
+  release: '2025.11.22.007',
   releaseDate: '2025-11-22',
   changelog: [
+    {
+      version: '2.0.7',
+      release: '2025.11.22.007',
+      date: '2025-11-22',
+      changes: [
+        'Feature: FormPreview component showing real-time budget impact visualization',
+        'Feature: BudgetBar component with color-coded status (green/yellow/red)',
+        'Feature: Before/After budget comparison in form preview',
+        'Feature: Detailed warnings for budget concerns (exceed, low balance)',
+        'Feature: Visual trend indicators showing increase/decrease in spending',
+        'Improvement: Expenses page now shows category budget impact preview',
+        'Improvement: Provisions page now shows category reservation impact preview',
+        'Improvement: Smart warnings about budget constraints before submission',
+        'Improvement: Animated budget bar with smooth transitions',
+        'UX: Users can now anticipate the impact of their actions before confirming',
+        'UX: Color-coded feedback makes budget status immediately clear',
+        'Accessibility: Budget bars with proper ARIA attributes for screen readers',
+      ],
+    },
     {
       version: '2.0.6',
       release: '2025.11.22.006',
