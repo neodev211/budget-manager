@@ -1,6 +1,6 @@
 {
   "name": "budget-manager-frontend",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Budget Manager - Frontend built with Next.js, React, and Tailwind CSS",
   "private": true,
   "scripts": {

@@ -7,6 +7,7 @@ import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import FilterBar from '@/components/FilterBar';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
+import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
 import { provisionService } from '@/services/provisionService';
 import { categoryService } from '@/services/categoryService';
 import { Provision, CreateProvisionDTO, Category, ProvisionStatus } from '@/types';
@@ -18,7 +19,10 @@ export default function ProvisionsPage() {
   const toast = useToastContext();
   const [provisions, setProvisions] = useState<Provision[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingInitial, setLoadingInitial] = useState(true);
+  const [loadingCreate, setLoadingCreate] = useState(false);
+  const [loadingUpdate, setLoadingUpdate] = useState(false);
+  const [loadingDelete, setLoadingDelete] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showBulkCopyModal, setShowBulkCopyModal] = useState(false);
@@ -56,7 +60,7 @@ export default function ProvisionsPage() {
 
   const loadData = async () => {
     try {
-      setLoading(true);
+      setLoadingInitial(true);
       const [provisionsData, categoriesData] = await Promise.all([
         provisionService.getAll(),
         categoryService.getAll()
@@ -72,8 +76,9 @@ export default function ProvisionsPage() {
       }
     } catch (error) {
       console.error('Error loading data:', error);
+      toast.error('Error al cargar los datos');
     } finally {
-      setLoading(false);
+      setLoadingInitial(false);
     }
   };
 
@@ -102,6 +107,12 @@ export default function ProvisionsPage() {
     }
 
     try {
+      if (editingId) {
+        setLoadingUpdate(true);
+      } else {
+        setLoadingCreate(true);
+      }
+
       const dataToSend = {
         ...formData,
         amount: Math.abs(formData.amount) * -1,
@@ -130,6 +141,9 @@ export default function ProvisionsPage() {
     } catch (error) {
       console.error('Error al guardar provisión:', error);
       toast.error('❌ Error al guardar la provisión');
+    } finally {
+      setLoadingCreate(false);
+      setLoadingUpdate(false);
     }
   };
 
@@ -164,6 +178,7 @@ export default function ProvisionsPage() {
   const handleDeleteConfirm = async () => {
     if (!deleteModal.provisionId) return;
     try {
+      setLoadingDelete(deleteModal.provisionId);
       await provisionService.delete(deleteModal.provisionId);
       toast.success('✅ Provisión eliminada exitosamente');
       setDeleteModal({ isOpen: false, provisionId: null });
@@ -172,6 +187,8 @@ export default function ProvisionsPage() {
       console.error('Error deleting provision:', error);
       toast.error('❌ Error al eliminar la provisión');
       setDeleteModal({ isOpen: false, provisionId: null });
+    } finally {
+      setLoadingDelete(null);
     }
   };
 
@@ -594,7 +611,9 @@ export default function ProvisionsPage() {
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               />
               <div className="flex gap-2">
-                <Button type="submit">{editingId ? 'Actualizar' : 'Guardar'}</Button>
+                <Button type="submit" disabled={loadingCreate || loadingUpdate}>
+                  {editingId ? 'Actualizar' : 'Guardar'}
+                </Button>
                 <Button type="button" variant="secondary" onClick={handleCancel}>
                   Cancelar
                 </Button>
@@ -604,8 +623,10 @@ export default function ProvisionsPage() {
         </Card>
       )}
 
-      {loading ? (
-        <div className="text-center py-12">Cargando...</div>
+      {loadingInitial ? (
+        <Card>
+          <SkeletonLoader type="table" count={5} />
+        </Card>
       ) : groupedProvisions.length === 0 ? (
         <Card>
           <CardContent className="text-center py-12">
@@ -709,8 +730,9 @@ export default function ProvisionsPage() {
                               variant="danger"
                               size="sm"
                               onClick={() => handleDeleteClick(provision.id)}
+                              disabled={loadingDelete === provision.id}
                             >
-                              <Trash2 className="w-4 h-4" />
+                              {loadingDelete === provision.id ? '⏳' : <Trash2 className="w-4 h-4" />}
                             </Button>
                           </div>
                         </div>

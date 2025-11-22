@@ -8,6 +8,7 @@ import Select from '@/components/ui/Select';
 import FilterBar from '@/components/FilterBar';
 import StatusBadge from '@/components/StatusBadge';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
+import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
 import { categoryService } from '@/services/categoryService';
 import { expenseService } from '@/services/expenseService';
 import { provisionService } from '@/services/provisionService';
@@ -28,7 +29,10 @@ export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [expenses, setExpenses] = useState<any[]>([]);
   const [provisions, setProvisions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingInitial, setLoadingInitial] = useState(true);
+  const [loadingCreate, setLoadingCreate] = useState(false);
+  const [loadingUpdate, setLoadingUpdate] = useState(false);
+  const [loadingDelete, setLoadingDelete] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
@@ -51,7 +55,7 @@ export default function CategoriesPage() {
 
   const loadCategories = async () => {
     try {
-      setLoading(true);
+      setLoadingInitial(true);
       const [categoriesData, expensesData, provisionsData] = await Promise.all([
         categoryService.getAll(),
         expenseService.getAll(),
@@ -62,14 +66,21 @@ export default function CategoriesPage() {
       setProvisions(provisionsData);
     } catch (error) {
       console.error('Error loading categories:', error);
+      toast.error('❌ Error al cargar las categorías');
     } finally {
-      setLoading(false);
+      setLoadingInitial(false);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      if (editingId) {
+        setLoadingUpdate(true);
+      } else {
+        setLoadingCreate(true);
+      }
+
       if (editingId) {
         // Update existing category
         await categoryService.update(editingId, formData);
@@ -86,6 +97,9 @@ export default function CategoriesPage() {
     } catch (error) {
       console.error('Error al guardar categoría:', error);
       toast.error('❌ Error al guardar la categoría');
+    } finally {
+      setLoadingCreate(false);
+      setLoadingUpdate(false);
     }
   };
 
@@ -113,6 +127,7 @@ export default function CategoriesPage() {
   const handleDeleteConfirm = async () => {
     if (!deleteModal.categoryId) return;
     try {
+      setLoadingDelete(deleteModal.categoryId);
       await categoryService.delete(deleteModal.categoryId);
       toast.success('✅ Categoría eliminada exitosamente');
       setDeleteModal({ isOpen: false, categoryId: null });
@@ -121,6 +136,8 @@ export default function CategoriesPage() {
       console.error('Error deleting category:', error);
       toast.error('❌ Error al eliminar la categoría');
       setDeleteModal({ isOpen: false, categoryId: null });
+    } finally {
+      setLoadingDelete(null);
     }
   };
 
@@ -277,8 +294,10 @@ export default function CategoriesPage() {
                 />
               </div>
               <div className="flex gap-2">
-                <Button type="submit">{editingId ? 'Actualizar' : 'Guardar'}</Button>
-                <Button type="button" variant="secondary" onClick={handleCancel}>
+                <Button type="submit" disabled={loadingCreate || loadingUpdate}>
+                  {loadingCreate || loadingUpdate ? 'Procesando...' : editingId ? 'Actualizar' : 'Guardar'}
+                </Button>
+                <Button type="button" variant="secondary" onClick={handleCancel} disabled={loadingCreate || loadingUpdate}>
                   Cancelar
                 </Button>
               </div>
@@ -287,8 +306,15 @@ export default function CategoriesPage() {
         </Card>
       )}
 
-      {loading ? (
-        <div className="text-center py-12">Cargando...</div>
+      {loadingInitial ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Categorías</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SkeletonLoader type="card" count={3} />
+          </CardContent>
+        </Card>
       ) : categories.length === 0 ? (
         <Card>
           <CardContent className="text-center py-12">
@@ -330,8 +356,9 @@ export default function CategoriesPage() {
                       variant="danger"
                       size="sm"
                       onClick={() => handleDeleteClick(category.id)}
+                      disabled={loadingDelete === category.id}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      {loadingDelete === category.id ? '⏳' : <Trash2 className="w-4 h-4" />}
                     </Button>
                   </div>
                 </div>

@@ -7,6 +7,7 @@ import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import FilterBar from '@/components/FilterBar';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
+import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
 import { expenseService } from '@/services/expenseService';
 import { categoryService } from '@/services/categoryService';
 import { provisionService } from '@/services/provisionService';
@@ -20,7 +21,10 @@ export default function ExpensesPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [provisions, setProvisions] = useState<Provision[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingInitial, setLoadingInitial] = useState(true);
+  const [loadingCreate, setLoadingCreate] = useState(false);
+  const [loadingUpdate, setLoadingUpdate] = useState(false);
+  const [loadingDelete, setLoadingDelete] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
@@ -49,7 +53,7 @@ export default function ExpensesPage() {
 
   const loadData = async () => {
     try {
-      setLoading(true);
+      setLoadingInitial(true);
       const [expensesData, categoriesData, provisionsData] = await Promise.all([
         expenseService.getAll(),
         categoryService.getAll(),
@@ -63,8 +67,9 @@ export default function ExpensesPage() {
       }
     } catch (error) {
       console.error('Error loading data:', error);
+      toast.error('❌ Error al cargar los datos');
     } finally {
-      setLoading(false);
+      setLoadingInitial(false);
     }
   };
 
@@ -147,6 +152,12 @@ export default function ExpensesPage() {
     e.preventDefault();
 
     try {
+      if (editingId) {
+        setLoadingUpdate(true);
+      } else {
+        setLoadingCreate(true);
+      }
+
       // Convertir la fecha a ISO 8601 y asegurarnos que el monto sea negativo
       const dataToSend = {
         ...formData,
@@ -177,6 +188,9 @@ export default function ExpensesPage() {
     } catch (error) {
       console.error('Error al guardar gasto:', error);
       toast.error('❌ Error al guardar el gasto');
+    } finally {
+      setLoadingCreate(false);
+      setLoadingUpdate(false);
     }
   };
 
@@ -213,6 +227,7 @@ export default function ExpensesPage() {
   const handleDeleteConfirm = async () => {
     if (!deleteModal.expenseId) return;
     try {
+      setLoadingDelete(deleteModal.expenseId);
       await expenseService.delete(deleteModal.expenseId);
       toast.success('✅ Gasto eliminado exitosamente');
       setDeleteModal({ isOpen: false, expenseId: null });
@@ -221,6 +236,8 @@ export default function ExpensesPage() {
       console.error('Error deleting expense:', error);
       toast.error('❌ Error al eliminar el gasto');
       setDeleteModal({ isOpen: false, expenseId: null });
+    } finally {
+      setLoadingDelete(null);
     }
   };
 
@@ -594,11 +611,11 @@ export default function ExpensesPage() {
               <div className="flex gap-2">
                 <Button
                   type="submit"
-                  disabled={!currentValidation.valid}
+                  disabled={!currentValidation.valid || loadingCreate || loadingUpdate}
                 >
-                  {editingId ? 'Actualizar Gasto' : 'Guardar Gasto'}
+                  {loadingCreate || loadingUpdate ? 'Procesando...' : editingId ? 'Actualizar Gasto' : 'Guardar Gasto'}
                 </Button>
-                <Button type="button" variant="secondary" onClick={handleCancel}>
+                <Button type="button" variant="secondary" onClick={handleCancel} disabled={loadingCreate || loadingUpdate}>
                   Cancelar
                 </Button>
               </div>
@@ -608,8 +625,15 @@ export default function ExpensesPage() {
       )}
 
       {/* Lista de Gastos */}
-      {loading ? (
-        <div className="text-center py-12">Cargando...</div>
+      {loadingInitial ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Gastos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SkeletonLoader type="table" count={5} />
+          </CardContent>
+        </Card>
       ) : expenses.length === 0 ? (
         <Card>
           <CardContent className="text-center py-12">
@@ -688,8 +712,9 @@ export default function ExpensesPage() {
                             variant="danger"
                             size="sm"
                             onClick={() => handleDeleteClick(expense.id)}
+                            disabled={loadingDelete === expense.id}
                           >
-                            <Trash2 className="w-4 h-4" />
+                            {loadingDelete === expense.id ? '⏳' : <Trash2 className="w-4 h-4" />}
                           </Button>
                         </div>
                       </td>

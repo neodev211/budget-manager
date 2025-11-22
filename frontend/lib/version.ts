@@ -6,10 +6,24 @@
  */
 
 export const VERSION_INFO = {
-  version: '2.0.2',
-  release: '2025.11.22.002',
+  version: '2.0.3',
+  release: '2025.11.22.003',
   releaseDate: '2025-11-22',
   changelog: [
+    {
+      version: '2.0.3',
+      release: '2025.11.22.003',
+      date: '2025-11-22',
+      changes: [
+        'Feature: Granular loading states for all operations (create, update, delete)',
+        'Feature: SkeletonLoader component for better visual feedback during data loading',
+        'Improvement: Replaced global loading state with specific operation states',
+        'Improvement: Skeleton loaders for tables and cards show placeholder during fetch',
+        'Improvement: Individual delete button loading indicators (⏳ icon)',
+        'Improvement: Form buttons show "Procesando..." state during submission',
+        'UX: Users now see what\'s loading and can interact with other parts of the page',
+      ],
+    },
     {
       version: '2.0.2',
       release: '2025.11.22.002',

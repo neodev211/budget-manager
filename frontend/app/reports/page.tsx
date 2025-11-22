@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
+import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
 import { reportService } from '@/services/reportService';
 import { categoryService } from '@/services/categoryService';
 import {
@@ -16,10 +17,15 @@ import {
 } from '@/types';
 import { formatCurrency, formatDate, formatPercent } from '@/lib/utils';
 import { BarChart3, TrendingUp, CreditCard, CheckCircle, Calendar } from 'lucide-react';
+import { useToastContext } from '@/lib/context/ToastContext';
 
 export default function ReportsPage() {
+  const toast = useToastContext();
   const [activeTab, setActiveTab] = useState<'category' | 'period' | 'payment' | 'provision'>('category');
-  const [loading, setLoading] = useState(false);
+  const [loadingInitial, setLoadingInitial] = useState(true);
+  const [loadingCreate, setLoadingCreate] = useState(false);
+  const [loadingUpdate, setLoadingUpdate] = useState(false);
+  const [loadingDelete, setLoadingDelete] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
 
   // Category Detail Report states
@@ -45,6 +51,7 @@ export default function ReportsPage() {
 
   const loadCategories = async () => {
     try {
+      setLoadingInitial(true);
       const data = await categoryService.getAll();
       setCategories(data);
       if (data.length > 0) {
@@ -55,6 +62,9 @@ export default function ReportsPage() {
       }
     } catch (error) {
       console.error('Error loading categories:', error);
+      toast.error('Error al cargar categorías');
+    } finally {
+      setLoadingInitial(false);
     }
   };
 
@@ -66,14 +76,15 @@ export default function ReportsPage() {
   // Category Detail Report handlers
   const handleLoadCategoryDetail = async () => {
     if (!selectedCategory || !selectedPeriod) return;
-    setLoading(true);
+    setLoadingCreate(true);
     try {
       const report = await reportService.getCategoryDetailReport(selectedCategory, selectedPeriod);
       setCategoryDetailReport(report);
     } catch (error) {
       console.error('Error loading category detail report:', error);
+      toast.error('Error al cargar el reporte');
     } finally {
-      setLoading(false);
+      setLoadingCreate(false);
     }
   };
 
@@ -90,42 +101,45 @@ export default function ReportsPage() {
 
   const handleLoadPeriodComparison = async () => {
     if (selectedPeriods.length < 2) return;
-    setLoading(true);
+    setLoadingCreate(true);
     try {
       const report = await reportService.getPeriodComparisonReport(selectedPeriods);
       setPeriodComparisonReport(report);
     } catch (error) {
       console.error('Error loading period comparison report:', error);
+      toast.error('Error al cargar el reporte');
     } finally {
-      setLoading(false);
+      setLoadingCreate(false);
     }
   };
 
   // Payment Method Report handlers
   const handleLoadPaymentMethod = async () => {
     if (!paymentPeriod) return;
-    setLoading(true);
+    setLoadingCreate(true);
     try {
       const report = await reportService.getPaymentMethodReport(paymentPeriod);
       setPaymentMethodReport(report);
     } catch (error) {
       console.error('Error loading payment method report:', error);
+      toast.error('Error al cargar el reporte');
     } finally {
-      setLoading(false);
+      setLoadingCreate(false);
     }
   };
 
   // Provision Fulfillment Report handlers
   const handleLoadProvisionFulfillment = async () => {
     if (!provisionPeriod) return;
-    setLoading(true);
+    setLoadingCreate(true);
     try {
       const report = await reportService.getProvisionFulfillmentReport(provisionPeriod);
       setProvisionFulfillmentReport(report);
     } catch (error) {
       console.error('Error loading provision fulfillment report:', error);
+      toast.error('Error al cargar el reporte');
     } finally {
-      setLoading(false);
+      setLoadingCreate(false);
     }
   };
 
@@ -144,6 +158,12 @@ export default function ReportsPage() {
         <p className="text-gray-600 mt-1">Analiza en detalle tu presupuesto y gastos</p>
       </div>
 
+      {loadingInitial ? (
+        <Card>
+          <SkeletonLoader type="table" count={5} />
+        </Card>
+      ) : (
+        <>
       {/* Tabs */}
       <div className="flex gap-2 overflow-x-auto">
         {tabs.map(tab => {
@@ -187,8 +207,8 @@ export default function ReportsPage() {
                   onChange={(e) => setSelectedPeriod(e.target.value)}
                 />
               </div>
-              <Button onClick={handleLoadCategoryDetail} disabled={!selectedCategory || !selectedPeriod || loading}>
-                {loading ? 'Cargando...' : 'Generar Reporte'}
+              <Button onClick={handleLoadCategoryDetail} disabled={!selectedCategory || !selectedPeriod || loadingCreate}>
+                {loadingCreate ? 'Cargando...' : 'Generar Reporte'}
               </Button>
             </CardContent>
           </Card>
@@ -303,8 +323,8 @@ export default function ReportsPage() {
                   ))}
                 </div>
               </div>
-              <Button onClick={handleLoadPeriodComparison} disabled={selectedPeriods.length < 2 || loading}>
-                {loading ? 'Cargando...' : 'Generar Comparación'}
+              <Button onClick={handleLoadPeriodComparison} disabled={selectedPeriods.length < 2 || loadingCreate}>
+                {loadingCreate ? 'Cargando...' : 'Generar Comparación'}
               </Button>
             </CardContent>
           </Card>
@@ -401,8 +421,8 @@ export default function ReportsPage() {
                   onChange={(e) => setPaymentPeriod(e.target.value)}
                   className="flex-1"
                 />
-                <Button onClick={handleLoadPaymentMethod} disabled={!paymentPeriod || loading}>
-                  {loading ? 'Cargando...' : 'Generar Reporte'}
+                <Button onClick={handleLoadPaymentMethod} disabled={!paymentPeriod || loadingCreate}>
+                  {loadingCreate ? 'Cargando...' : 'Generar Reporte'}
                 </Button>
               </div>
             </CardContent>
@@ -471,8 +491,8 @@ export default function ReportsPage() {
                   onChange={(e) => setProvisionPeriod(e.target.value)}
                   className="flex-1"
                 />
-                <Button onClick={handleLoadProvisionFulfillment} disabled={!provisionPeriod || loading}>
-                  {loading ? 'Cargando...' : 'Generar Reporte'}
+                <Button onClick={handleLoadProvisionFulfillment} disabled={!provisionPeriod || loadingCreate}>
+                  {loadingCreate ? 'Cargando...' : 'Generar Reporte'}
                 </Button>
               </div>
             </CardContent>
@@ -567,6 +587,8 @@ export default function ReportsPage() {
             </div>
           )}
         </div>
+      )}
+        </>
       )}
     </div>
   );
