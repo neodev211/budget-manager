@@ -428,7 +428,14 @@ export default function ProvisionsPage() {
   })).filter(group => group.provisions.length > 0);
 
   const openProvisions = getFilteredProvisions().filter(p => p.status === ProvisionStatus.OPEN);
-  const totalOpen = openProvisions.reduce((sum, p) => sum + Math.abs(p.amount), 0);
+  // ✅ FIXED: Total should be sum of remaining balance (saldo) for each provision
+  // Saldo = amount (provisioned) - usedAmount (spent on expenses)
+  const totalOpen = openProvisions.reduce((sum, p) => {
+    const provisioned = Math.abs(p.amount);
+    const spent = Math.abs(p.usedAmount || 0);
+    const remainingBalance = provisioned - spent;
+    return sum + remainingBalance;
+  }, 0);
 
   return (
     <div className="space-y-6">

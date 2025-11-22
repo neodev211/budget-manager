@@ -160,9 +160,16 @@ export default function CategoriesPage() {
     const categoryProvisions = provisions.filter((p) => p.categoryId === categoryId);
 
     const usedFromExpenses = categoryExpenses.reduce((sum, e) => sum + Math.abs(e.amount), 0);
+    // ✅ FIXED: usedFromProvisions should be the saldo (remaining balance), not the full provisioned amount
+    // Saldo = amount - usedAmount (provisioned - spent on linked expenses)
     const usedFromProvisions = categoryProvisions
       .filter((p) => p.status === 'OPEN')
-      .reduce((sum, p) => sum + Math.abs(p.amount), 0);
+      .reduce((sum, p) => {
+        const provisioned = Math.abs(p.amount);
+        const spent = Math.abs(p.usedAmount || 0);
+        const saldo = provisioned - spent;
+        return sum + saldo;
+      }, 0);
 
     const category = categories.find((c) => c.id === categoryId);
     if (!category) return 0;

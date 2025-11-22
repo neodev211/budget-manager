@@ -6,10 +6,21 @@
  */
 
 export const VERSION_INFO = {
-  version: '2.0.0',
-  release: '2025.11.20.004',
-  releaseDate: '2025-11-20',
+  version: '2.0.1',
+  release: '2025.11.22.001',
+  releaseDate: '2025-11-22',
   changelog: [
+    {
+      version: '2.0.1',
+      release: '2025.11.22.001',
+      date: '2025-11-22',
+      changes: [
+        'Fix: Provisions page - Total open provisions now shows sum of remaining balance (saldo) instead of full amount',
+        'Fix: Categories page - Available budget now correctly calculated as: presupuesto - saldo_provisiones - gastado',
+        'Improvement: Both calculations now properly account for expenses linked to provisions',
+        'Note: saldo (remaining balance) = provisioned amount - linked expenses',
+      ],
+    },
     {
       version: '2.0.0',
       release: '2025.11.20.004',
