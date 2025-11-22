@@ -1,6 +1,7 @@
 import { Expense, UpdateExpenseDTO, PaymentMethod } from '../../../domain/entities/Expense';
 import { IExpenseRepository } from '../../../domain/repositories/IExpenseRepository';
 import { ICategoryRepository } from '../../../domain/repositories/ICategoryRepository';
+import { IProvisionRepository } from '../../../domain/repositories/IProvisionRepository';
 import { ValidationService } from '../../services/ValidationService';
 import { Money } from '../../../domain/value-objects/Money';
 
@@ -9,11 +10,13 @@ import { Money } from '../../../domain/value-objects/Money';
  *
  * Caso de uso para actualizar un gasto.
  * Solo los campos proporcionados son actualizados (partial update).
+ * ✅ SECURITY: Validates existence of new category and provision before update
  */
 export class UpdateExpenseUseCase {
   constructor(
     private readonly expenseRepository: IExpenseRepository,
-    private readonly categoryRepository: ICategoryRepository
+    private readonly categoryRepository: ICategoryRepository,
+    private readonly provisionRepository: IProvisionRepository
   ) {}
 
   async execute(id: string, input: UpdateExpenseDTO): Promise<Expense> {
@@ -35,6 +38,17 @@ export class UpdateExpenseUseCase {
       if (!category) {
         throw new Error(`Category with id "${input.categoryId}" not found`);
       }
+    }
+
+    // ✅ FIXED: Si se actualiza provisionId, verificar que existe
+    if (input.provisionId !== undefined) {
+      if (input.provisionId !== null) {
+        const provision = await this.provisionRepository.findById(input.provisionId);
+        if (!provision) {
+          throw new Error(`Provision with id "${input.provisionId}" not found`);
+        }
+      }
+      // null es permitido (desenlazar la provision)
     }
 
     // Validar monto si se proporciona

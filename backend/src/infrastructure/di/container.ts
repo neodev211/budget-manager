@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { Container } from 'inversify';
 import { TYPES } from './types';
+import { LoggerService } from '../../application/services/LoggerService';
 
 // ===== Repository Interfaces =====
 import { ICategoryRepository } from '../../domain/repositories/ICategoryRepository';
@@ -81,7 +82,7 @@ export class DIContainer {
     DIContainer.categoryRepository = null;
     DIContainer.expenseRepository = null;
     DIContainer.provisionRepository = null;
-    console.log(`[DIContainer] Switched to ${orm} ORM`);
+    LoggerService.info(`DIContainer switched to ${orm} ORM`);
   }
 
   /**
@@ -340,14 +341,17 @@ export class DIContainer {
 
   /**
    * Get UpdateExpenseUseCase instance
+   * ✅ FIXED: Now includes ProvisionRepository for validating provisionId
    */
   static getUpdateExpenseUseCase(
     expenseRepository?: IExpenseRepository,
-    categoryRepository?: ICategoryRepository
+    categoryRepository?: ICategoryRepository,
+    provisionRepository?: IProvisionRepository
   ): UpdateExpenseUseCase {
     const expRepo = expenseRepository || DIContainer.getExpenseRepository();
     const catRepo = categoryRepository || DIContainer.getCategoryRepository();
-    return new UpdateExpenseUseCase(expRepo, catRepo);
+    const provRepo = provisionRepository || DIContainer.getProvisionRepository();
+    return new UpdateExpenseUseCase(expRepo, catRepo, provRepo);
   }
 
   /**

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../config/supabase';
 import { PrismaClient } from '@prisma/client';
+import { LoggerService } from '../../application/services/LoggerService';
 
 /**
  * Extended Request type with authenticated user data
@@ -74,17 +75,17 @@ export const authenticateToken = async (
             name: user.user_metadata?.name || user.email?.split('@')[0],
           },
         });
-        console.log(`✅ User provisioned in database: ${user.email}`);
+        LoggerService.info(`User provisioned in database: ${user.email}`);
       }
     } catch (dbError) {
-      console.error('Error provisioning user in database:', dbError);
+      LoggerService.warn('Error provisioning user in database', dbError);
       // Don't block authentication if user provisioning fails
       // The error might be due to concurrent requests
     }
 
     next();
   } catch (error) {
-    console.error('Auth middleware error:', error);
+    LoggerService.error('Auth middleware error', error);
     res.status(500).json({
       error: 'Internal server error during authentication',
       code: 'AUTH_ERROR',

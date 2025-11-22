@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { LoggerService } from '../../application/services/LoggerService';
 
 const prisma = new PrismaClient({
   // ✅ OPTIMIZED: Logging configuration for query performance monitoring
@@ -17,12 +18,10 @@ const prisma = new PrismaClient({
 
         // Log all queries in development mode
         if (process.env.NODE_ENV === 'development') {
-          console.log(`📊 [${model}.${operation}] ${duration}ms`);
-        }
-
-        // Log slow queries in all environments (> 200ms)
-        if (duration > 200) {
-          console.warn(`⏱️ Slow [${model}.${operation}] (${duration}ms)`);
+          LoggerService.database(`[${model}.${operation}]`, duration);
+        } else if (duration > 200) {
+          // Log slow queries in all environments (> 200ms)
+          LoggerService.database(`[${model}.${operation}]`, duration);
         }
 
         return result;
@@ -33,9 +32,9 @@ const prisma = new PrismaClient({
 
 // Handle graceful shutdown
 process.on('SIGINT', async () => {
-  console.log('\n🛑 Closing database connection pool...');
+  LoggerService.info('Closing database connection pool...');
   await prisma.$disconnect();
-  console.log('✅ Connection pool closed');
+  LoggerService.info('Connection pool closed');
   process.exit(0);
 });
 

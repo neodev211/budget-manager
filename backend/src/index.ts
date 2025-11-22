@@ -8,6 +8,7 @@ import provisionRoutes from './presentation/routes/provisionRoutes';
 import expenseRoutes from './presentation/routes/expenseRoutes';
 import reportRoutes from './presentation/routes/reportRoutes';
 import { authenticateToken } from './infrastructure/middleware/authMiddleware';
+import { LoggerService } from './application/services/LoggerService';
 
 dotenv.config();
 
@@ -54,12 +55,12 @@ app.use('/api/reports', reportRoutes);
 
 // Error handling
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
+  LoggerService.error('Unhandled error', err);
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Budget Management API ready`);
-  console.log(`🏥 Health check: http://localhost:${PORT}/health`);
+  LoggerService.startup(`Server running on port ${PORT}`);
+  LoggerService.startup(`Budget Management API ready`);
+  LoggerService.startup(`Health check: http://localhost:${PORT}/health`);
 });
