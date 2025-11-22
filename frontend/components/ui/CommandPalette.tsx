@@ -136,25 +136,32 @@ export function CommandPalette({ actions }: CommandPaletteProps) {
             className="w-full max-w-2xl bg-white rounded-lg shadow-2xl overflow-hidden"
           >
             {/* Search Input */}
-            <div className="p-4 border-b border-gray-200 flex items-center gap-3">
-              <Search className="w-5 h-5 text-gray-400" />
-              <input
-                ref={inputRef}
-                type="text"
-                placeholder="Search commands..."
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setSelectedIndex(0);
-                }}
-                className="flex-1 outline-none text-lg"
-              />
-              <button
-                onClick={() => setIsOpen(false)}
-                className="p-1 hover:bg-gray-100 rounded transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-400" />
-              </button>
+            <div className="p-4 border-b border-gray-200 space-y-2">
+              <div className="flex items-center gap-3">
+                <Search className="w-5 h-5 text-gray-400" />
+                <input
+                  ref={inputRef}
+                  type="text"
+                  placeholder="Escribe para buscar comandos..."
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setSelectedIndex(0);
+                  }}
+                  className="flex-1 outline-none text-lg"
+                />
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="p-1 hover:bg-gray-100 rounded transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-400" />
+                </button>
+              </div>
+              {search === '' && (
+                <p className="text-xs text-gray-500 px-1">
+                  💡 Escribe para filtrar comandos. Usa las flechas ↑↓ para navegar, Enter para seleccionar.
+                </p>
+              )}
             </div>
 
             {/* Actions List */}
@@ -213,11 +220,11 @@ export function CommandPalette({ actions }: CommandPaletteProps) {
             {/* Footer */}
             <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between text-xs text-gray-500">
               <div className="flex gap-4">
-                <span>↑↓ Navigate</span>
-                <span>↵ Select</span>
-                <span>ESC Close</span>
+                <span>↑↓ Navegar</span>
+                <span>↵ Seleccionar</span>
+                <span>ESC Cerrar</span>
               </div>
-              <span>{flatActions.length} commands</span>
+              <span>{flatActions.length} comandos</span>
             </div>
           </div>
         </div>

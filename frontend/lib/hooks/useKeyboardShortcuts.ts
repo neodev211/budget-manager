@@ -37,9 +37,9 @@ export function useKeyboardShortcuts(
           event.key.toLowerCase() === shortcut.key.toLowerCase() ||
           event.code === shortcut.key;
 
-        const ctrlMatches = shortcut.ctrl ? event.ctrlKey || event.metaKey : !event.ctrlKey && !event.metaKey;
-        const shiftMatches = shortcut.shift ? event.shiftKey : !event.shiftKey;
-        const altMatches = shortcut.alt ? event.altKey : !event.altKey;
+        const ctrlMatches = shortcut.ctrl ? (event.ctrlKey || event.metaKey) : true;
+        const shiftMatches = shortcut.shift ? event.shiftKey : true;
+        const altMatches = shortcut.alt ? event.altKey : true;
 
         if (keyMatches && ctrlMatches && shiftMatches && altMatches) {
           if (options.preventDefault) {

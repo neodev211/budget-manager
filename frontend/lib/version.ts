@@ -6,10 +6,23 @@
  */
 
 export const VERSION_INFO = {
-  version: '2.0.4',
-  release: '2025.11.22.004',
+  version: '2.0.5',
+  release: '2025.11.22.005',
   releaseDate: '2025-11-22',
   changelog: [
+    {
+      version: '2.0.5',
+      release: '2025.11.22.005',
+      date: '2025-11-22',
+      changes: [
+        'Fix: Corrected modifier key logic in useKeyboardShortcuts - now properly prevents browser defaults (Ctrl+N, Ctrl+S, etc.)',
+        'Fix: preventDefault now correctly fires for all keyboard shortcuts with modifier keys',
+        'Improvement: CommandPalette now shows helpful tip on first open: "Escribe para filtrar comandos..."',
+        'Improvement: Better Spanish localization - placeholder text and footer instructions now in Spanish',
+        'Improvement: Clear visual instructions for keyboard navigation (↑↓ Navegar, ↵ Seleccionar, ESC Cerrar)',
+        'UX: CommandPalette is now more intuitive for new users with explicit instructions to type',
+      ],
+    },
     {
       version: '2.0.4',
       release: '2025.11.22.004',
