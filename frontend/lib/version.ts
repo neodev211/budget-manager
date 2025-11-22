@@ -6,10 +6,37 @@
  */
 
 export const VERSION_INFO = {
-  version: '2.0.11',
-  release: '2025.11.22.011',
+  version: '2.0.12',
+  release: '2025.11.22.012',
   releaseDate: '2025-11-22',
   changelog: [
+    {
+      version: '2.0.12',
+      release: '2025.11.22.012',
+      date: '2025-11-22',
+      changes: [
+        'Reliability: Added 30-second timeout to all API requests',
+        'Reliability: Prevents hanging requests and improves UX',
+        'Reliability: Automatic retry for timeout errors (up to 3 attempts with exponential backoff)',
+        'Reliability: Redirect following limited to 5 hops to prevent redirect loops',
+        'Error Handling: Specific error types for different failure scenarios',
+        'Error Handling: ECONNABORTED detection for timeout errors',
+        'Error Handling: Network error detection with clear messaging',
+        'Error Handling: Rate limit error (429) detection with retry-after header support',
+        'Error Handling: Authentication error (401) with automatic login redirect',
+        'Error Handling: Forbidden (403), Not Found (404), Validation (400) error handling',
+        'Error Handling: Server error (5xx) detection and reporting',
+        'Error Handling: Structured error objects with specific flags (isTimeoutError, isNetworkError, etc.)',
+        'Logging: Emoji-prefixed error messages for quick visual identification',
+        'Logging: Request timeout logs show URL and retry attempts',
+        'Logging: Network errors logged with connection details',
+        'Improvement: validateStatus function allows 4xx errors without throwing',
+        'Improvement: Graceful auth session retrieval failure handling',
+        'Security: Content-Type enforcement on all requests',
+        'UX: Users see specific error messages (timeout, network, rate limit, auth)',
+        'Memory: WeakMap for tracking retries prevents memory leaks',
+      ],
+    },
     {
       version: '2.0.11',
       release: '2025.11.22.011',
