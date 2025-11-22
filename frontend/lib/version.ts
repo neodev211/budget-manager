@@ -6,10 +6,26 @@
  */
 
 export const VERSION_INFO = {
-  version: '2.0.8',
-  release: '2025.11.22.008',
+  version: '2.0.9',
+  release: '2025.11.22.009',
   releaseDate: '2025-11-22',
   changelog: [
+    {
+      version: '2.0.9',
+      release: '2025.11.22.009',
+      date: '2025-11-22',
+      changes: [
+        'Security: Implemented Helmet.js for comprehensive HTTP security headers',
+        'Security: Added Content-Security-Policy (CSP) with safe directives',
+        'Security: Configured strict HSTS (HTTP Strict Transport Security) with 1-year max age',
+        'Security: Enabled clickjacking protection via X-Frame-Options: DENY',
+        'Security: Prevented MIME-type sniffing with X-Content-Type-Options: nosniff',
+        'Security: Added XSS protection header (X-XSS-Protection)',
+        'Security: Configured CSP to allow self-hosted scripts and styles with unsafe-inline for existing frontend compatibility',
+        'Infrastructure: Helmet.js installed and integrated before CORS and other middleware',
+        'Documentation: Security headers protect against clickjacking, XSS, MIME sniffing attacks',
+      ],
+    },
     {
       version: '2.0.8',
       release: '2025.11.22.008',

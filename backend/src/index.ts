@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import compression from 'compression';
+import helmet from 'helmet';
 import dotenv from 'dotenv';
 
 import categoryRoutes from './presentation/routes/categoryRoutes';
@@ -21,6 +22,24 @@ const PORT = process.env.PORT || 3000;
 app.set('trust proxy', 1);
 
 // Middlewares
+// ✅ SECURITY: Helmet.js - HTTP Security Headers Configuration
+// Protects against clickjacking, XSS, MIME sniffing, and enforces HTTPS
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:', 'https:'],
+    }
+  },
+  hsts: {
+    maxAge: 31536000, // 1 year in seconds
+    includeSubDomains: true,
+    preload: true
+  }
+}));
+
 // ✅ CORS Configuration: Allow requests from Vercel frontend with credentials
 const corsOptions = {
   origin: [
