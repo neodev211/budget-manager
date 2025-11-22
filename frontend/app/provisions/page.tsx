@@ -17,6 +17,7 @@ import { useToastContext } from '@/lib/context/ToastContext';
 import { useKeyboardShortcuts, KeyboardShortcut } from '@/lib/hooks/useKeyboardShortcuts';
 import { CommandPalette, CommandPaletteAction } from '@/components/ui/CommandPalette';
 import { useRouter } from 'next/navigation';
+import { useFilterState } from '@/lib/hooks/useFilterState';
 
 export default function ProvisionsPage() {
   const toast = useToastContext();
@@ -33,11 +34,18 @@ export default function ProvisionsPage() {
   const [sourceCategoryId, setSourceCategoryId] = useState<string>('');
   const [targetCategoryId, setTargetCategoryId] = useState<string>('');
   const [selectedProvisionIds, setSelectedProvisionIds] = useState<Set<string>>(new Set());
-  const [filterCategoryId, setFilterCategoryId] = useState<string>('');
-  const [filterStatus, setFilterStatus] = useState<string>('ALL');
-  const [filterDueDateFrom, setFilterDueDateFrom] = useState<string>('');
-  const [filterDueDateTo, setFilterDueDateTo] = useState<string>('');
-  const [filterItemName, setFilterItemName] = useState<string>('');
+
+  // Filter state using persistent hook
+  const { filters, setFilterValue, clearFilters, hasActiveFilters } = useFilterState({
+    pageKey: 'provisions',
+    defaultFilters: {
+      categoryId: '',
+      status: 'ALL',
+      dueDateFrom: '',
+      dueDateTo: '',
+      itemName: ''
+    }
+  });
 
   // Refs for focus management
   const itemInputRef = useRef<HTMLInputElement>(null);
@@ -317,45 +325,31 @@ export default function ProvisionsPage() {
   const getFilteredProvisions = () => {
     let filtered = provisions;
 
-    if (filterCategoryId) {
-      filtered = filtered.filter((p) => p.categoryId === filterCategoryId);
+    if (filters.categoryId) {
+      filtered = filtered.filter((p) => p.categoryId === filters.categoryId);
     }
 
-    if (filterStatus === 'OPEN' || filterStatus === 'CLOSED') {
-      filtered = filtered.filter((p) => p.status === filterStatus);
+    if (filters.status === 'OPEN' || filters.status === 'CLOSED') {
+      filtered = filtered.filter((p) => p.status === filters.status);
     }
 
-    if (filterDueDateFrom) {
-      filtered = filtered.filter((p) => new Date(p.dueDate) >= new Date(filterDueDateFrom));
+    if (filters.dueDateFrom) {
+      filtered = filtered.filter((p) => new Date(p.dueDate) >= new Date(filters.dueDateFrom));
     }
 
-    if (filterDueDateTo) {
-      filtered = filtered.filter((p) => new Date(p.dueDate) <= new Date(filterDueDateTo));
+    if (filters.dueDateTo) {
+      filtered = filtered.filter((p) => new Date(p.dueDate) <= new Date(filters.dueDateTo));
     }
 
-    if (filterItemName) {
+    if (filters.itemName) {
       filtered = filtered.filter((p) =>
-        p.item.toLowerCase().includes(filterItemName.toLowerCase())
+        p.item.toLowerCase().includes(filters.itemName.toLowerCase())
       );
     }
 
     return filtered;
   };
 
-  const handleClearFilters = () => {
-    setFilterCategoryId('');
-    setFilterStatus('ALL');
-    setFilterDueDateFrom('');
-    setFilterDueDateTo('');
-    setFilterItemName('');
-  };
-
-  const hasActiveFilters =
-    filterCategoryId !== '' ||
-    filterStatus !== 'ALL' ||
-    filterDueDateFrom !== '' ||
-    filterDueDateTo !== '' ||
-    filterItemName !== '';
 
   // Calcular urgencia por due date
   const getDueDateStatus = (dueDate: string): 'urgent' | 'soon' | 'normal' => {
@@ -553,7 +547,7 @@ export default function ProvisionsPage() {
       label: 'Clear All Filters',
       description: 'Reset all active filters',
       category: 'Provisions',
-      action: handleClearFilters
+      action: clearFilters
     },
     {
       id: 'go-home',
@@ -635,15 +629,15 @@ export default function ProvisionsPage() {
       {/* Filtros */}
       {provisions.length > 0 && (
         <FilterBar
-          onClear={handleClearFilters}
+          onClear={clearFilters}
           hasActiveFilters={hasActiveFilters}
-          activeFilterCount={[filterCategoryId, filterStatus !== 'ALL' ? filterStatus : '', filterDueDateFrom, filterDueDateTo, filterItemName].filter(f => f).length}
+          activeFilterCount={[filters.categoryId, filters.status !== 'ALL' ? filters.status : '', filters.dueDateFrom, filters.dueDateTo, filters.itemName].filter(f => f).length}
         >
           <Select
             label="Categoría"
             options={[{ value: '', label: 'Todas' }, ...categories.map((c) => ({ value: c.id, label: c.name }))]}
-            value={filterCategoryId}
-            onChange={(e) => setFilterCategoryId(e.target.value)}
+            value={filters.categoryId}
+            onChange={(e) => setFilterValue('categoryId', e.target.value)}
           />
           <Select
             label="Estado"
@@ -652,26 +646,26 @@ export default function ProvisionsPage() {
               { value: 'OPEN', label: 'Abierta' },
               { value: 'CLOSED', label: 'Cerrada' }
             ]}
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
+            value={filters.status}
+            onChange={(e) => setFilterValue('status', e.target.value)}
           />
           <Input
             label="Buscar por item"
             placeholder="Ej: Donación..."
-            value={filterItemName}
-            onChange={(e) => setFilterItemName(e.target.value)}
+            value={filters.itemName}
+            onChange={(e) => setFilterValue('itemName', e.target.value)}
           />
           <Input
             label="Vencimiento desde"
             type="date"
-            value={filterDueDateFrom}
-            onChange={(e) => setFilterDueDateFrom(e.target.value)}
+            value={filters.dueDateFrom}
+            onChange={(e) => setFilterValue('dueDateFrom', e.target.value)}
           />
           <Input
             label="Vencimiento hasta"
             type="date"
-            value={filterDueDateTo}
-            onChange={(e) => setFilterDueDateTo(e.target.value)}
+            value={filters.dueDateTo}
+            onChange={(e) => setFilterValue('dueDateTo', e.target.value)}
           />
         </FilterBar>
       )}

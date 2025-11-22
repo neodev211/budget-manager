@@ -18,6 +18,7 @@ import { useToastContext } from '@/lib/context/ToastContext';
 import { useKeyboardShortcuts, KeyboardShortcut } from '@/lib/hooks/useKeyboardShortcuts';
 import { CommandPalette, CommandPaletteAction } from '@/components/ui/CommandPalette';
 import { useRouter } from 'next/navigation';
+import { useFilterState } from '@/lib/hooks/useFilterState';
 
 export default function ExpensesPage() {
   const toast = useToastContext();
@@ -32,12 +33,27 @@ export default function ExpensesPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
-  const [filterDateFrom, setFilterDateFrom] = useState<string>('');
-  const [filterDateTo, setFilterDateTo] = useState<string>('');
-  const [filterCategoryId, setFilterCategoryId] = useState<string>('');
-  const [filterProvisionId, setFilterProvisionId] = useState<string>('');
-  const [filterDescription, setFilterDescription] = useState<string>('');
-  const [filterPaymentMethod, setFilterPaymentMethod] = useState<string>('');
+
+  // Persistent filter state
+  const {
+    filters,
+    setFilterValue,
+    clearFilters,
+    hasActiveFilters
+  } = useFilterState({
+    pageKey: 'expenses',
+    defaultFilters: {
+      dateFrom: '',
+      dateTo: '',
+      categoryId: '',
+      provisionId: '',
+      description: '',
+      paymentMethod: ''
+    },
+    persistToLocalStorage: true,
+    syncWithUrl: true
+  });
+
   const [formData, setFormData] = useState<CreateExpenseDTO>({
     date: new Date().toISOString().split('T')[0],
     description: '',
@@ -330,30 +346,30 @@ export default function ExpensesPage() {
   const getFilteredExpenses = () => {
     let filtered = expenses;
 
-    if (filterDateFrom) {
-      filtered = filtered.filter((e) => new Date(e.date) >= new Date(filterDateFrom));
+    if (filters.dateFrom) {
+      filtered = filtered.filter((e) => new Date(e.date) >= new Date(filters.dateFrom));
     }
 
-    if (filterDateTo) {
-      filtered = filtered.filter((e) => new Date(e.date) <= new Date(filterDateTo));
+    if (filters.dateTo) {
+      filtered = filtered.filter((e) => new Date(e.date) <= new Date(filters.dateTo));
     }
 
-    if (filterCategoryId) {
-      filtered = filtered.filter((e) => e.categoryId === filterCategoryId);
+    if (filters.categoryId) {
+      filtered = filtered.filter((e) => e.categoryId === filters.categoryId);
     }
 
-    if (filterProvisionId) {
-      filtered = filtered.filter((e) => e.provisionId === filterProvisionId);
+    if (filters.provisionId) {
+      filtered = filtered.filter((e) => e.provisionId === filters.provisionId);
     }
 
-    if (filterDescription) {
+    if (filters.description) {
       filtered = filtered.filter((e) =>
-        e.description.toLowerCase().includes(filterDescription.toLowerCase())
+        e.description.toLowerCase().includes(filters.description.toLowerCase())
       );
     }
 
-    if (filterPaymentMethod) {
-      filtered = filtered.filter((e) => e.paymentMethod === filterPaymentMethod);
+    if (filters.paymentMethod) {
+      filtered = filtered.filter((e) => e.paymentMethod === filters.paymentMethod);
     }
 
     return filtered;
@@ -371,23 +387,6 @@ export default function ExpensesPage() {
       );
     }
   };
-
-  const handleClearFilters = () => {
-    setFilterDateFrom('');
-    setFilterDateTo('');
-    setFilterCategoryId('');
-    setFilterProvisionId('');
-    setFilterDescription('');
-    setFilterPaymentMethod('');
-  };
-
-  const hasActiveFilters =
-    filterDateFrom !== '' ||
-    filterDateTo !== '' ||
-    filterCategoryId !== '' ||
-    filterProvisionId !== '' ||
-    filterDescription !== '' ||
-    filterPaymentMethod !== '';
 
   const getFilteredTotalExpenses = () => {
     return getFilteredExpenses().reduce((sum, exp) => sum + Math.abs(exp.amount), 0);
@@ -472,7 +471,7 @@ export default function ExpensesPage() {
       label: 'Clear All Filters',
       description: 'Reset all active filters',
       category: 'Expenses',
-      action: handleClearFilters
+      action: clearFilters
     },
     {
       id: 'go-home',
@@ -556,41 +555,41 @@ export default function ExpensesPage() {
       {/* Filtros */}
       {expenses.length > 0 && (
         <FilterBar
-          onClear={handleClearFilters}
+          onClear={clearFilters}
           hasActiveFilters={hasActiveFilters}
-          activeFilterCount={[filterDateFrom, filterDateTo, filterCategoryId, filterProvisionId, filterDescription, filterPaymentMethod].filter(f => f).length}
+          activeFilterCount={Object.values(filters).filter(f => f).length}
         >
           <Input
             label="Desde"
             type="date"
-            value={filterDateFrom}
-            onChange={(e) => setFilterDateFrom(e.target.value)}
+            value={filters.dateFrom}
+            onChange={(e) => setFilterValue('dateFrom', e.target.value)}
           />
           <Input
             label="Hasta"
             type="date"
-            value={filterDateTo}
-            onChange={(e) => setFilterDateTo(e.target.value)}
+            value={filters.dateTo}
+            onChange={(e) => setFilterValue('dateTo', e.target.value)}
           />
           <Select
             label="Categoría"
             options={[{ value: '', label: 'Todas' }, ...categories.map((c) => ({ value: c.id, label: c.name }))]}
-            value={filterCategoryId}
-            onChange={(e) => setFilterCategoryId(e.target.value)}
+            value={filters.categoryId}
+            onChange={(e) => setFilterValue('categoryId', e.target.value)}
           />
           <Input
             ref={filterDescriptionRef}
             label="Buscar descripción"
             placeholder="Ej: Supermercado..."
-            value={filterDescription}
-            onChange={(e) => setFilterDescription(e.target.value)}
+            value={filters.description}
+            onChange={(e) => setFilterValue('description', e.target.value)}
           />
           {provisions.length > 0 && (
             <Select
               label="Provisión"
               options={[{ value: '', label: 'Todas' }, ...provisions.map((p) => ({ value: p.id, label: p.item }))]}
-              value={filterProvisionId}
-              onChange={(e) => setFilterProvisionId(e.target.value)}
+              value={filters.provisionId}
+              onChange={(e) => setFilterValue('provisionId', e.target.value)}
             />
           )}
           <Select
@@ -602,8 +601,8 @@ export default function ExpensesPage() {
               { value: 'CARD', label: '💳 Tarjeta' },
               { value: 'OTHER', label: '📄 Otro' }
             ]}
-            value={filterPaymentMethod}
-            onChange={(e) => setFilterPaymentMethod(e.target.value)}
+            value={filters.paymentMethod}
+            onChange={(e) => setFilterValue('paymentMethod', e.target.value)}
           />
         </FilterBar>
       )}

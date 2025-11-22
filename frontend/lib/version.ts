@@ -6,10 +6,27 @@
  */
 
 export const VERSION_INFO = {
-  version: '2.0.5',
-  release: '2025.11.22.005',
+  version: '2.0.6',
+  release: '2025.11.22.006',
   releaseDate: '2025-11-22',
   changelog: [
+    {
+      version: '2.0.6',
+      release: '2025.11.22.006',
+      date: '2025-11-22',
+      changes: [
+        'Feature: Persistent filters with localStorage and URL synchronization',
+        'Feature: Created useFilterState custom hook for managing filter state across pages',
+        'Feature: Filters now persist when navigating away and returning to the page',
+        'Feature: Shareable filter configurations via URL parameters',
+        'Feature: Favorite filters management (save, load, delete filter presets)',
+        'Improvement: Expenses, Categories, and Provisions pages now use centralized filter management',
+        'Improvement: Reduced boilerplate code - replaced 6 useState declarations with single hook call per page',
+        'Improvement: Filter state synchronization with URL search parameters for shareable configurations',
+        'UX: Users no longer lose filter selections when navigating between pages',
+        'UX: Filter preferences are restored automatically on page reload',
+      ],
+    },
     {
       version: '2.0.5',
       release: '2025.11.22.005',

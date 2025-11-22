@@ -19,6 +19,7 @@ import { useToastContext } from '@/lib/context/ToastContext';
 import { useKeyboardShortcuts, KeyboardShortcut } from '@/lib/hooks/useKeyboardShortcuts';
 import { CommandPalette, CommandPaletteAction } from '@/components/ui/CommandPalette';
 import { useRouter } from 'next/navigation';
+import { useFilterState } from '@/lib/hooks/useFilterState';
 
 const getDefaultPeriod = () => {
   const today = new Date();
@@ -40,8 +41,13 @@ export default function CategoriesPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
-  const [filterPeriod, setFilterPeriod] = useState<string>('');
-  const [filterName, setFilterName] = useState<string>('');
+  const { filters, setFilterValue, clearFilters, hasActiveFilters } = useFilterState({
+    pageKey: 'categories',
+    defaultFilters: {
+      period: '',
+      name: ''
+    }
+  });
   const [formData, setFormData] = useState<CreateCategoryDTO>({
     name: '',
     period: getDefaultPeriod(),
@@ -161,13 +167,13 @@ export default function CategoriesPage() {
   const getFilteredCategories = () => {
     let filtered = categories;
 
-    if (filterPeriod) {
-      filtered = filtered.filter((c) => c.period === filterPeriod);
+    if (filters.period) {
+      filtered = filtered.filter((c) => c.period === filters.period);
     }
 
-    if (filterName) {
+    if (filters.name) {
       filtered = filtered.filter((c) =>
-        c.name.toLowerCase().includes(filterName.toLowerCase())
+        c.name.toLowerCase().includes(filters.name.toLowerCase())
       );
     }
 
@@ -187,12 +193,6 @@ export default function CategoriesPage() {
     }
   };
 
-  const handleClearFilters = () => {
-    setFilterPeriod('');
-    setFilterName('');
-  };
-
-  const hasActiveFilters = filterPeriod !== '' || filterName !== '';
 
   // Focus first input when form opens
   useEffect(() => {
@@ -273,7 +273,7 @@ export default function CategoriesPage() {
       label: 'Clear All Filters',
       description: 'Reset all active filters',
       category: 'Categories',
-      action: handleClearFilters
+      action: clearFilters
     },
     {
       id: 'go-home',
@@ -362,22 +362,22 @@ export default function CategoriesPage() {
 
       {categories.length > 0 && (
         <FilterBar
-          onClear={handleClearFilters}
+          onClear={clearFilters}
           hasActiveFilters={hasActiveFilters}
-          activeFilterCount={[filterPeriod, filterName].filter(f => f).length}
+          activeFilterCount={[filters.period, filters.name].filter(f => f).length}
         >
           <Select
             label="Período"
             options={[{ value: '', label: 'Todos los períodos' }, ...getUniquePeriods()]}
-            value={filterPeriod}
-            onChange={(e) => setFilterPeriod(e.target.value)}
+            value={filters.period}
+            onChange={(e) => setFilterValue('period', e.target.value)}
           />
           <Input
             ref={filterNameRef}
             label="Buscar por nombre"
             placeholder="ej: Sueldo, Gastos..."
-            value={filterName}
-            onChange={(e) => setFilterName(e.target.value)}
+            value={filters.name}
+            onChange={(e) => setFilterValue('name', e.target.value)}
           />
         </FilterBar>
       )}
