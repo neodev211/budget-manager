@@ -7,8 +7,8 @@ export interface Provision {
   id: string;
   item: string;
   categoryId: string;
-  amount: number; // Always negative
-  usedAmount: number; // ✅ MATERIALIZED: Sum of linked expenses, cached in DB (always negative)
+  amount: number; // Always negative (provisioned budget is stored as negative)
+  usedAmount: number; // ✅ MATERIALIZED: Sum of linked expenses, cached in DB (always positive - absolute value)
   dueDate: Date;
   status: ProvisionStatus;
   notes?: string;
