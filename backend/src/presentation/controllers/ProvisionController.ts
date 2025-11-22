@@ -223,8 +223,9 @@ export class ProvisionController {
    * GET /api/provisions/:id/materialized-amount
    * Get the materialized amount for a provision (must belong to authenticated user's category)
    *
-   * Note: This endpoint will be refactored in future phases
-   * to use a dedicated use case for this calculation
+   * ✅ IMPLEMENTATION: Directly calls repository method for validation/audit purposes
+   * - Shows total expenses linked to the provision
+   * - Useful for reconciliation and data validation
    */
   async getMaterializedAmount(req: Request, res: Response): Promise<void> {
     try {
@@ -265,8 +266,10 @@ export class ProvisionController {
    * POST /api/provisions/:id/copy
    * Copy a provision to another category (both categories must belong to authenticated user)
    *
-   * Note: This endpoint will be refactored in future phases
-   * to use a dedicated use case
+   * ✅ IMPLEMENTATION: Directly calls repository method
+   * - Copies provision structure and metadata to target category
+   * - Useful for recurring provisions across periods
+   * - Security: Validates both source and target category ownership
    */
   async copyToCategory(req: Request, res: Response): Promise<void> {
     try {
@@ -325,8 +328,10 @@ export class ProvisionController {
    * POST /api/provisions/bulk-copy
    * Copy multiple provisions to another category (all provisions and target category must belong to authenticated user)
    *
-   * Note: This endpoint will be refactored in future phases
-   * to use a dedicated use case
+   * ✅ IMPLEMENTATION: Directly calls repository method for batch operations
+   * - Efficiently copies multiple provisions in a single transaction
+   * - Useful for period resets or bulk category migrations
+   * - Security: Validates all provisions and target category ownership
    */
   async bulkCopyToCategory(req: Request, res: Response): Promise<void> {
     try {

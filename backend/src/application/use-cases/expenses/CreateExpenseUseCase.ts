@@ -77,7 +77,7 @@ export class CreateExpenseUseCase {
       () =>
         input.provisionId &&
         ValidationService.validateUUID(input.provisionId, 'provisionId'),
-      () => ValidationService.validateDate(input.date, 'date'),
+      () => ValidationService.validateNotFutureDate(input.date, 'date'),
       () =>
         input.paymentMethod &&
         ValidationService.validateEnum(
