@@ -8,12 +8,17 @@ import provisionRoutes from './presentation/routes/provisionRoutes';
 import expenseRoutes from './presentation/routes/expenseRoutes';
 import reportRoutes from './presentation/routes/reportRoutes';
 import { authenticateToken } from './infrastructure/middleware/authMiddleware';
+import { apiLimiter, writeOperationsLimiter } from './infrastructure/middleware/rateLimitMiddleware';
 import { LoggerService } from './application/services/LoggerService';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// ✅ SECURITY: Trust proxy headers (for accurate IP detection behind load balancers)
+// Important for rate limiting to work correctly in production
+app.set('trust proxy', 1);
 
 // Middlewares
 // ✅ CORS Configuration: Allow requests from Vercel frontend with credentials
@@ -29,6 +34,10 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+// ✅ SECURITY: Rate limiting to prevent DoS and brute force attacks
+app.use(apiLimiter);
+
 // ✅ OPTIMIZED: Compression middleware to reduce response sizes by 60-80%
 app.use(compression({
   filter: (req, res) => {
@@ -46,6 +55,31 @@ app.get('/health', (req, res) => {
 
 // ✅ PROTECTED ROUTES: Apply authentication middleware globally to all /api routes
 app.use('/api', authenticateToken);
+
+// ✅ SECURITY: Apply stricter rate limiting for write operations (POST, PUT, DELETE)
+app.use('/api/categories', (req, res, next) => {
+  if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
+    writeOperationsLimiter(req, res, next);
+  } else {
+    next();
+  }
+});
+
+app.use('/api/provisions', (req, res, next) => {
+  if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
+    writeOperationsLimiter(req, res, next);
+  } else {
+    next();
+  }
+});
+
+app.use('/api/expenses', (req, res, next) => {
+  if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
+    writeOperationsLimiter(req, res, next);
+  } else {
+    next();
+  }
+});
 
 // Routes (all protected by authenticateToken middleware)
 app.use('/api/categories', categoryRoutes);

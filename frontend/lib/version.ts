@@ -6,10 +6,29 @@
  */
 
 export const VERSION_INFO = {
-  version: '2.0.7',
-  release: '2025.11.22.007',
+  version: '2.0.8',
+  release: '2025.11.22.008',
   releaseDate: '2025-11-22',
   changelog: [
+    {
+      version: '2.0.8',
+      release: '2025.11.22.008',
+      date: '2025-11-22',
+      changes: [
+        'Security: Implemented comprehensive rate limiting to prevent DoS and brute force attacks',
+        'Security: Added express-rate-limit middleware with configurable limits',
+        'Security: General API rate limit: 100 requests per 15 minutes per IP',
+        'Security: Strict write operations limit: 30 requests per 15 minutes per IP',
+        'Security: Auth rate limiter: 5 failed attempts per 15 minutes per IP',
+        'Security: Proper IP detection with X-Forwarded-For header support',
+        'Security: Rate limit headers in HTTP responses (RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset)',
+        'Improvement: Trust proxy configuration for accurate IP detection behind load balancers',
+        'Improvement: Automatic logging of rate limit violations',
+        'Improvement: Spanish-language error messages for rate limit responses',
+        'Infrastructure: Rate limiting suitable for single-instance deployments',
+        'Documentation: Security notes on upgrading to Redis for distributed deployments',
+      ],
+    },
     {
       version: '2.0.7',
       release: '2025.11.22.007',
