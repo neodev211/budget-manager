@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import FilterBar from '@/components/FilterBar';
+import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
 import { expenseService } from '@/services/expenseService';
 import { categoryService } from '@/services/categoryService';
 import { provisionService } from '@/services/provisionService';
@@ -36,6 +37,10 @@ export default function ExpensesPage() {
     amount: 0,
     paymentMethod: PaymentMethod.CASH,
     provisionId: undefined
+  });
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; expenseId: string | null }>({
+    isOpen: false,
+    expenseId: null,
   });
 
   useEffect(() => {
@@ -201,16 +206,26 @@ export default function ExpensesPage() {
     setShowForm(false);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de eliminar este gasto?')) return;
+  const handleDeleteClick = (id: string) => {
+    setDeleteModal({ isOpen: true, expenseId: id });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteModal.expenseId) return;
     try {
-      await expenseService.delete(id);
+      await expenseService.delete(deleteModal.expenseId);
       toast.success('✅ Gasto eliminado exitosamente');
+      setDeleteModal({ isOpen: false, expenseId: null });
       loadData();
     } catch (error) {
       console.error('Error deleting expense:', error);
       toast.error('❌ Error al eliminar el gasto');
+      setDeleteModal({ isOpen: false, expenseId: null });
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModal({ isOpen: false, expenseId: null });
   };
 
   const getCategoryName = (categoryId: string) => {
@@ -672,7 +687,7 @@ export default function ExpensesPage() {
                           <Button
                             variant="danger"
                             size="sm"
-                            onClick={() => handleDelete(expense.id)}
+                            onClick={() => handleDeleteClick(expense.id)}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -686,6 +701,18 @@ export default function ExpensesPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={deleteModal.isOpen}
+        title="Eliminar Gasto"
+        message="¿Estás seguro de que deseas eliminar este gasto? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        isDangerous={true}
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+      />
     </div>
   );
 }

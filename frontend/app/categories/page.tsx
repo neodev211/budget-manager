@@ -7,6 +7,7 @@ import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import FilterBar from '@/components/FilterBar';
 import StatusBadge from '@/components/StatusBadge';
+import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
 import { categoryService } from '@/services/categoryService';
 import { expenseService } from '@/services/expenseService';
 import { provisionService } from '@/services/provisionService';
@@ -38,6 +39,10 @@ export default function CategoriesPage() {
     period: getDefaultPeriod(),
     monthlyBudget: 0,
     notes: ''
+  });
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; categoryId: string | null }>({
+    isOpen: false,
+    categoryId: null,
   });
 
   useEffect(() => {
@@ -101,16 +106,26 @@ export default function CategoriesPage() {
     setShowForm(false);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de eliminar esta categoría?')) return;
+  const handleDeleteClick = (id: string) => {
+    setDeleteModal({ isOpen: true, categoryId: id });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteModal.categoryId) return;
     try {
-      await categoryService.delete(id);
+      await categoryService.delete(deleteModal.categoryId);
       toast.success('✅ Categoría eliminada exitosamente');
+      setDeleteModal({ isOpen: false, categoryId: null });
       loadCategories();
     } catch (error) {
       console.error('Error deleting category:', error);
       toast.error('❌ Error al eliminar la categoría');
+      setDeleteModal({ isOpen: false, categoryId: null });
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModal({ isOpen: false, categoryId: null });
   };
 
   const getUniquePeriods = () => {
@@ -314,7 +329,7 @@ export default function CategoriesPage() {
                     <Button
                       variant="danger"
                       size="sm"
-                      onClick={() => handleDelete(category.id)}
+                      onClick={() => handleDeleteClick(category.id)}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -351,6 +366,18 @@ export default function CategoriesPage() {
           ))}
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={deleteModal.isOpen}
+        title="Eliminar Categoría"
+        message="¿Estás seguro de que deseas eliminar esta categoría? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        isDangerous={true}
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+      />
     </div>
   );
 }

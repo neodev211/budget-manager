@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import FilterBar from '@/components/FilterBar';
+import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
 import { provisionService } from '@/services/provisionService';
 import { categoryService } from '@/services/categoryService';
 import { Provision, CreateProvisionDTO, Category, ProvisionStatus } from '@/types';
@@ -43,6 +44,10 @@ export default function ProvisionsPage() {
     amount: 0,
     dueDate: getDefaultDueDate(),
     notes: ''
+  });
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; provisionId: string | null }>({
+    isOpen: false,
+    provisionId: null,
   });
 
   useEffect(() => {
@@ -152,16 +157,26 @@ export default function ProvisionsPage() {
     setShowForm(false);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de eliminar esta provisión?')) return;
+  const handleDeleteClick = (id: string) => {
+    setDeleteModal({ isOpen: true, provisionId: id });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteModal.provisionId) return;
     try {
-      await provisionService.delete(id);
+      await provisionService.delete(deleteModal.provisionId);
       toast.success('✅ Provisión eliminada exitosamente');
+      setDeleteModal({ isOpen: false, provisionId: null });
       loadData();
     } catch (error) {
       console.error('Error deleting provision:', error);
       toast.error('❌ Error al eliminar la provisión');
+      setDeleteModal({ isOpen: false, provisionId: null });
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModal({ isOpen: false, provisionId: null });
   };
 
   const handleClose = async (id: string) => {
@@ -693,7 +708,7 @@ export default function ProvisionsPage() {
                             <Button
                               variant="danger"
                               size="sm"
-                              onClick={() => handleDelete(provision.id)}
+                              onClick={() => handleDeleteClick(provision.id)}
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -842,6 +857,18 @@ export default function ProvisionsPage() {
           </Card>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={deleteModal.isOpen}
+        title="Eliminar Provisión"
+        message="¿Estás seguro de que deseas eliminar esta provisión? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        isDangerous={true}
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+      />
     </div>
   );
 }

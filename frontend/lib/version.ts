@@ -6,10 +6,23 @@
  */
 
 export const VERSION_INFO = {
-  version: '2.0.1',
-  release: '2025.11.22.001',
+  version: '2.0.2',
+  release: '2025.11.22.002',
   releaseDate: '2025-11-22',
   changelog: [
+    {
+      version: '2.0.2',
+      release: '2025.11.22.002',
+      date: '2025-11-22',
+      changes: [
+        'Feature: Custom confirmation modal component for all delete operations',
+        'Improvement: Replaced window.confirm() with styled ConfirmationModal',
+        'Improvement: Consistent delete confirmation across expenses, categories, and provisions pages',
+        'Improvement: Better mobile UX - Modal is fully styleable and accessible',
+        'Improvement: Keyboard navigation support - Press Escape to cancel',
+        'UI: Clear danger state styling with red buttons for delete actions',
+      ],
+    },
     {
       version: '2.0.1',
       release: '2025.11.22.001',
