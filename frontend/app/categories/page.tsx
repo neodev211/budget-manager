@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -14,8 +14,11 @@ import { expenseService } from '@/services/expenseService';
 import { provisionService } from '@/services/provisionService';
 import { Category, CreateCategoryDTO } from '@/types';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { Plus, Trash2, Edit2 } from 'lucide-react';
+import { Plus, Trash2, Edit2, Home, Wallet, Package, FileText } from 'lucide-react';
 import { useToastContext } from '@/lib/context/ToastContext';
+import { useKeyboardShortcuts, KeyboardShortcut } from '@/lib/hooks/useKeyboardShortcuts';
+import { CommandPalette, CommandPaletteAction } from '@/components/ui/CommandPalette';
+import { useRouter } from 'next/navigation';
 
 const getDefaultPeriod = () => {
   const today = new Date();
@@ -26,6 +29,7 @@ const getDefaultPeriod = () => {
 
 export default function CategoriesPage() {
   const toast = useToastContext();
+  const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [expenses, setExpenses] = useState<any[]>([]);
   const [provisions, setProvisions] = useState<any[]>([]);
@@ -48,6 +52,10 @@ export default function CategoriesPage() {
     isOpen: false,
     categoryId: null,
   });
+
+  // Refs for focus management
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const filterNameRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadCategories();
@@ -186,6 +194,121 @@ export default function CategoriesPage() {
 
   const hasActiveFilters = filterPeriod !== '' || filterName !== '';
 
+  // Focus first input when form opens
+  useEffect(() => {
+    if (showForm && nameInputRef.current) {
+      nameInputRef.current.focus();
+    }
+  }, [showForm]);
+
+  // Keyboard shortcuts
+  const handleSubmitShortcut = () => {
+    if (showForm) {
+      const form = document.querySelector('form') as HTMLFormElement;
+      if (form) {
+        form.requestSubmit();
+      }
+    }
+  };
+
+  useKeyboardShortcuts([
+    {
+      key: 'n',
+      ctrl: true,
+      callback: () => {
+        if (!showForm) {
+          setShowForm(true);
+        }
+      },
+      description: 'Create new category'
+    },
+    {
+      key: 's',
+      ctrl: true,
+      callback: handleSubmitShortcut,
+      description: 'Save category'
+    },
+    {
+      key: 'Escape',
+      callback: () => {
+        if (showForm) {
+          handleCancel();
+        }
+      },
+      description: 'Cancel'
+    },
+    {
+      key: 'f',
+      ctrl: true,
+      callback: () => {
+        if (filterNameRef.current) {
+          filterNameRef.current.focus();
+        }
+      },
+      description: 'Focus on name filter'
+    }
+  ]);
+
+  // CommandPalette actions
+  const commandPaletteActions: CommandPaletteAction[] = [
+    {
+      id: 'new-category',
+      label: 'Create New Category',
+      description: 'Open form to create a new category',
+      category: 'Categories',
+      icon: <Plus className="w-4 h-4" />,
+      shortcut: { key: 'n', ctrl: true, callback: () => setShowForm(true) },
+      action: () => setShowForm(true)
+    },
+    {
+      id: 'save-category',
+      label: 'Save Category',
+      description: 'Save the current category form',
+      category: 'Categories',
+      shortcut: { key: 's', ctrl: true, callback: handleSubmitShortcut },
+      action: handleSubmitShortcut
+    },
+    {
+      id: 'clear-filters',
+      label: 'Clear All Filters',
+      description: 'Reset all active filters',
+      category: 'Categories',
+      action: handleClearFilters
+    },
+    {
+      id: 'go-home',
+      label: 'Go to Home',
+      description: 'Navigate to home page',
+      category: 'Navigation',
+      icon: <Home className="w-4 h-4" />,
+      action: () => router.push('/')
+    },
+    {
+      id: 'go-expenses',
+      label: 'Go to Expenses',
+      description: 'Navigate to expenses page',
+      category: 'Navigation',
+      icon: <Wallet className="w-4 h-4" />,
+      action: () => router.push('/expenses')
+    },
+    {
+      id: 'go-provisions',
+      label: 'Go to Provisions',
+      description: 'Navigate to provisions page',
+      category: 'Navigation',
+      icon: <Package className="w-4 h-4" />,
+      action: () => router.push('/provisions')
+    },
+    {
+      id: 'go-reports',
+      label: 'Go to Reports',
+      description: 'Navigate to reports page',
+      category: 'Navigation',
+      icon: <FileText className="w-4 h-4" />,
+      action: () => router.push('/reports')
+    }
+  ];
+
   // Calcular presupuesto disponible por categoría
   const getAvailableBudget = (categoryId: string) => {
     const categoryExpenses = expenses.filter((e) => e.categoryId === categoryId);
@@ -211,6 +334,9 @@ export default function CategoriesPage() {
 
   return (
     <div className="space-y-6">
+      {/* Command Palette */}
+      <CommandPalette actions={commandPaletteActions} />
+
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Categorías</h2>
@@ -247,6 +373,7 @@ export default function CategoriesPage() {
             onChange={(e) => setFilterPeriod(e.target.value)}
           />
           <Input
+            ref={filterNameRef}
             label="Buscar por nombre"
             placeholder="ej: Sueldo, Gastos..."
             value={filterName}
@@ -264,6 +391,7 @@ export default function CategoriesPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
+                  ref={nameInputRef}
                   label="Nombre"
                   required
                   value={formData.name}

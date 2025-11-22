@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -12,11 +12,15 @@ import { provisionService } from '@/services/provisionService';
 import { categoryService } from '@/services/categoryService';
 import { Provision, CreateProvisionDTO, Category, ProvisionStatus } from '@/types';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { Plus, Trash2, CheckCircle, Copy, ChevronDown, Edit2 } from 'lucide-react';
+import { Plus, Trash2, CheckCircle, Copy, ChevronDown, Edit2, Home, Wallet, FolderOpen, FileText } from 'lucide-react';
 import { useToastContext } from '@/lib/context/ToastContext';
+import { useKeyboardShortcuts, KeyboardShortcut } from '@/lib/hooks/useKeyboardShortcuts';
+import { CommandPalette, CommandPaletteAction } from '@/components/ui/CommandPalette';
+import { useRouter } from 'next/navigation';
 
 export default function ProvisionsPage() {
   const toast = useToastContext();
+  const router = useRouter();
   const [provisions, setProvisions] = useState<Provision[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingInitial, setLoadingInitial] = useState(true);
@@ -34,6 +38,9 @@ export default function ProvisionsPage() {
   const [filterDueDateFrom, setFilterDueDateFrom] = useState<string>('');
   const [filterDueDateTo, setFilterDueDateTo] = useState<string>('');
   const [filterItemName, setFilterItemName] = useState<string>('');
+
+  // Refs for focus management
+  const itemInputRef = useRef<HTMLInputElement>(null);
 
   // Calcular fecha default: último día del mes siguiente
   const getDefaultDueDate = () => {
@@ -469,8 +476,124 @@ export default function ProvisionsPage() {
     return sum + remainingBalance;
   }, 0);
 
+  // Focus first input when form opens
+  useEffect(() => {
+    if (showForm && itemInputRef.current) {
+      itemInputRef.current.focus();
+    }
+  }, [showForm]);
+
+  // Keyboard shortcuts
+  const handleSubmitShortcut = () => {
+    if (showForm) {
+      const form = document.querySelector('form') as HTMLFormElement;
+      if (form) {
+        form.requestSubmit();
+      }
+    }
+  };
+
+  useKeyboardShortcuts([
+    {
+      key: 'n',
+      ctrl: true,
+      callback: () => {
+        if (!showForm) {
+          setShowForm(true);
+        }
+      },
+      description: 'Create new provision'
+    },
+    {
+      key: 's',
+      ctrl: true,
+      callback: handleSubmitShortcut,
+      description: 'Save provision'
+    },
+    {
+      key: 'Escape',
+      callback: () => {
+        if (showForm) {
+          handleCancel();
+        }
+      },
+      description: 'Cancel'
+    }
+  ]);
+
+  // CommandPalette actions
+  const commandPaletteActions: CommandPaletteAction[] = [
+    {
+      id: 'new-provision',
+      label: 'Create New Provision',
+      description: 'Open form to create a new provision',
+      category: 'Provisions',
+      icon: <Plus className="w-4 h-4" />,
+      shortcut: { key: 'n', ctrl: true, callback: () => setShowForm(true) },
+      action: () => setShowForm(true)
+    },
+    {
+      id: 'save-provision',
+      label: 'Save Provision',
+      description: 'Save the current provision form',
+      category: 'Provisions',
+      shortcut: { key: 's', ctrl: true, callback: handleSubmitShortcut },
+      action: handleSubmitShortcut
+    },
+    {
+      id: 'copy-provisions',
+      label: 'Copy Provisions',
+      description: 'Open bulk copy provisions modal',
+      category: 'Provisions',
+      icon: <Copy className="w-4 h-4" />,
+      action: openBulkCopyModal
+    },
+    {
+      id: 'clear-filters',
+      label: 'Clear All Filters',
+      description: 'Reset all active filters',
+      category: 'Provisions',
+      action: handleClearFilters
+    },
+    {
+      id: 'go-home',
+      label: 'Go to Home',
+      description: 'Navigate to home page',
+      category: 'Navigation',
+      icon: <Home className="w-4 h-4" />,
+      action: () => router.push('/')
+    },
+    {
+      id: 'go-expenses',
+      label: 'Go to Expenses',
+      description: 'Navigate to expenses page',
+      category: 'Navigation',
+      icon: <Wallet className="w-4 h-4" />,
+      action: () => router.push('/expenses')
+    },
+    {
+      id: 'go-categories',
+      label: 'Go to Categories',
+      description: 'Navigate to categories page',
+      category: 'Navigation',
+      icon: <FolderOpen className="w-4 h-4" />,
+      action: () => router.push('/categories')
+    },
+    {
+      id: 'go-reports',
+      label: 'Go to Reports',
+      description: 'Navigate to reports page',
+      category: 'Navigation',
+      icon: <FileText className="w-4 h-4" />,
+      action: () => router.push('/reports')
+    }
+  ];
+
   return (
     <div className="space-y-6">
+      {/* Command Palette */}
+      <CommandPalette actions={commandPaletteActions} />
+
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Provisiones</h2>
@@ -562,6 +685,7 @@ export default function ProvisionsPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
+                  ref={itemInputRef}
                   label="Descripción del Item"
                   required
                   value={formData.item}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -13,11 +13,15 @@ import { categoryService } from '@/services/categoryService';
 import { provisionService } from '@/services/provisionService';
 import { Expense, CreateExpenseDTO, Category, Provision, ProvisionStatus, PaymentMethod } from '@/types';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { Plus, Trash2, Edit2, Wallet } from 'lucide-react';
+import { Plus, Trash2, Edit2, Wallet, Home, FolderOpen, Package, FileText } from 'lucide-react';
 import { useToastContext } from '@/lib/context/ToastContext';
+import { useKeyboardShortcuts, KeyboardShortcut } from '@/lib/hooks/useKeyboardShortcuts';
+import { CommandPalette, CommandPaletteAction } from '@/components/ui/CommandPalette';
+import { useRouter } from 'next/navigation';
 
 export default function ExpensesPage() {
   const toast = useToastContext();
+  const router = useRouter();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [provisions, setProvisions] = useState<Provision[]>([]);
@@ -46,6 +50,10 @@ export default function ExpensesPage() {
     isOpen: false,
     expenseId: null,
   });
+
+  // Refs for focus management
+  const amountInputRef = useRef<HTMLInputElement>(null);
+  const filterDescriptionRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadData();
@@ -385,8 +393,126 @@ export default function ExpensesPage() {
     return getFilteredExpenses().reduce((sum, exp) => sum + Math.abs(exp.amount), 0);
   };
 
+  // Focus first input when form opens
+  useEffect(() => {
+    if (showForm && amountInputRef.current) {
+      amountInputRef.current.focus();
+    }
+  }, [showForm]);
+
+  // Keyboard shortcuts
+  const handleSubmitShortcut = () => {
+    if (showForm && currentValidation.valid) {
+      const form = document.querySelector('form') as HTMLFormElement;
+      if (form) {
+        form.requestSubmit();
+      }
+    }
+  };
+
+  useKeyboardShortcuts([
+    {
+      key: 'n',
+      ctrl: true,
+      callback: () => {
+        if (!showForm) {
+          setShowForm(true);
+        }
+      },
+      description: 'Create new expense'
+    },
+    {
+      key: 's',
+      ctrl: true,
+      callback: handleSubmitShortcut,
+      description: 'Save expense form'
+    },
+    {
+      key: 'Escape',
+      callback: () => {
+        if (showForm) {
+          handleCancel();
+        }
+      },
+      description: 'Cancel/close form'
+    },
+    {
+      key: 'f',
+      ctrl: true,
+      callback: () => {
+        if (filterDescriptionRef.current) {
+          filterDescriptionRef.current.focus();
+        }
+      },
+      description: 'Focus on filter description'
+    }
+  ]);
+
+  // CommandPalette actions
+  const commandPaletteActions: CommandPaletteAction[] = [
+    {
+      id: 'new-expense',
+      label: 'Create New Expense',
+      description: 'Open form to create a new expense',
+      category: 'Expenses',
+      icon: <Plus className="w-4 h-4" />,
+      shortcut: { key: 'n', ctrl: true, callback: () => setShowForm(true) },
+      action: () => setShowForm(true)
+    },
+    {
+      id: 'save-expense',
+      label: 'Save Expense',
+      description: 'Save the current expense form',
+      category: 'Expenses',
+      shortcut: { key: 's', ctrl: true, callback: handleSubmitShortcut },
+      action: handleSubmitShortcut
+    },
+    {
+      id: 'clear-filters',
+      label: 'Clear All Filters',
+      description: 'Reset all active filters',
+      category: 'Expenses',
+      action: handleClearFilters
+    },
+    {
+      id: 'go-home',
+      label: 'Go to Home',
+      description: 'Navigate to home page',
+      category: 'Navigation',
+      icon: <Home className="w-4 h-4" />,
+      action: () => router.push('/')
+    },
+    {
+      id: 'go-categories',
+      label: 'Go to Categories',
+      description: 'Navigate to categories page',
+      category: 'Navigation',
+      icon: <FolderOpen className="w-4 h-4" />,
+      action: () => router.push('/categories')
+    },
+    {
+      id: 'go-provisions',
+      label: 'Go to Provisions',
+      description: 'Navigate to provisions page',
+      category: 'Navigation',
+      icon: <Package className="w-4 h-4" />,
+      action: () => router.push('/provisions')
+    },
+    {
+      id: 'go-reports',
+      label: 'Go to Reports',
+      description: 'Navigate to reports page',
+      category: 'Navigation',
+      icon: <FileText className="w-4 h-4" />,
+      action: () => router.push('/reports')
+    }
+  ];
+
   return (
     <div className="space-y-6">
+      {/* Command Palette */}
+      <CommandPalette actions={commandPaletteActions} />
+
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Gastos</h2>
@@ -453,6 +579,7 @@ export default function ExpensesPage() {
             onChange={(e) => setFilterCategoryId(e.target.value)}
           />
           <Input
+            ref={filterDescriptionRef}
             label="Buscar descripción"
             placeholder="Ej: Supermercado..."
             value={filterDescription}
@@ -492,6 +619,7 @@ export default function ExpensesPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Campo 1: Monto */}
                 <Input
+                  ref={amountInputRef}
                   label="1. Monto (PEN)"
                   required
                   type="number"

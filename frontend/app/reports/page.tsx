@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -16,11 +16,15 @@ import {
   Category,
 } from '@/types';
 import { formatCurrency, formatDate, formatPercent } from '@/lib/utils';
-import { BarChart3, TrendingUp, CreditCard, CheckCircle, Calendar } from 'lucide-react';
+import { BarChart3, TrendingUp, CreditCard, CheckCircle, Calendar, Home, Wallet, FolderOpen, Package } from 'lucide-react';
 import { useToastContext } from '@/lib/context/ToastContext';
+import { useKeyboardShortcuts, KeyboardShortcut } from '@/lib/hooks/useKeyboardShortcuts';
+import { CommandPalette, CommandPaletteAction } from '@/components/ui/CommandPalette';
+import { useRouter } from 'next/navigation';
 
 export default function ReportsPage() {
   const toast = useToastContext();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'category' | 'period' | 'payment' | 'provision'>('category');
   const [loadingInitial, setLoadingInitial] = useState(true);
   const [loadingCreate, setLoadingCreate] = useState(false);
@@ -150,8 +154,139 @@ export default function ReportsPage() {
     { id: 'provision', label: 'Cumplimiento de Provisiones', icon: CheckCircle },
   ];
 
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      key: '1',
+      ctrl: true,
+      callback: () => setActiveTab('category'),
+      description: 'Switch to Category Detail tab'
+    },
+    {
+      key: '2',
+      ctrl: true,
+      callback: () => setActiveTab('period'),
+      description: 'Switch to Period Comparison tab'
+    },
+    {
+      key: '3',
+      ctrl: true,
+      callback: () => setActiveTab('payment'),
+      description: 'Switch to Payment Method tab'
+    },
+    {
+      key: '4',
+      ctrl: true,
+      callback: () => setActiveTab('provision'),
+      description: 'Switch to Provision Fulfillment tab'
+    }
+  ]);
+
+  // CommandPalette actions
+  const commandPaletteActions: CommandPaletteAction[] = [
+    {
+      id: 'tab-category',
+      label: 'Category Detail Report',
+      description: 'Switch to category detail report tab',
+      category: 'Reports',
+      icon: <BarChart3 className="w-4 h-4" />,
+      shortcut: { key: '1', ctrl: true, callback: () => setActiveTab('category') },
+      action: () => setActiveTab('category')
+    },
+    {
+      id: 'tab-period',
+      label: 'Period Comparison Report',
+      description: 'Switch to period comparison report tab',
+      category: 'Reports',
+      icon: <TrendingUp className="w-4 h-4" />,
+      shortcut: { key: '2', ctrl: true, callback: () => setActiveTab('period') },
+      action: () => setActiveTab('period')
+    },
+    {
+      id: 'tab-payment',
+      label: 'Payment Method Report',
+      description: 'Switch to payment method report tab',
+      category: 'Reports',
+      icon: <CreditCard className="w-4 h-4" />,
+      shortcut: { key: '3', ctrl: true, callback: () => setActiveTab('payment') },
+      action: () => setActiveTab('payment')
+    },
+    {
+      id: 'tab-provision',
+      label: 'Provision Fulfillment Report',
+      description: 'Switch to provision fulfillment report tab',
+      category: 'Reports',
+      icon: <CheckCircle className="w-4 h-4" />,
+      shortcut: { key: '4', ctrl: true, callback: () => setActiveTab('provision') },
+      action: () => setActiveTab('provision')
+    },
+    {
+      id: 'generate-category',
+      label: 'Generate Category Report',
+      description: 'Generate the category detail report',
+      category: 'Reports',
+      action: handleLoadCategoryDetail
+    },
+    {
+      id: 'generate-period',
+      label: 'Generate Period Comparison',
+      description: 'Generate the period comparison report',
+      category: 'Reports',
+      action: handleLoadPeriodComparison
+    },
+    {
+      id: 'generate-payment',
+      label: 'Generate Payment Method Report',
+      description: 'Generate the payment method report',
+      category: 'Reports',
+      action: handleLoadPaymentMethod
+    },
+    {
+      id: 'generate-provision',
+      label: 'Generate Provision Report',
+      description: 'Generate the provision fulfillment report',
+      category: 'Reports',
+      action: handleLoadProvisionFulfillment
+    },
+    {
+      id: 'go-home',
+      label: 'Go to Home',
+      description: 'Navigate to home page',
+      category: 'Navigation',
+      icon: <Home className="w-4 h-4" />,
+      action: () => router.push('/')
+    },
+    {
+      id: 'go-expenses',
+      label: 'Go to Expenses',
+      description: 'Navigate to expenses page',
+      category: 'Navigation',
+      icon: <Wallet className="w-4 h-4" />,
+      action: () => router.push('/expenses')
+    },
+    {
+      id: 'go-categories',
+      label: 'Go to Categories',
+      description: 'Navigate to categories page',
+      category: 'Navigation',
+      icon: <FolderOpen className="w-4 h-4" />,
+      action: () => router.push('/categories')
+    },
+    {
+      id: 'go-provisions',
+      label: 'Go to Provisions',
+      description: 'Navigate to provisions page',
+      category: 'Navigation',
+      icon: <Package className="w-4 h-4" />,
+      action: () => router.push('/provisions')
+    }
+  ];
+
   return (
     <div className="space-y-6">
+      {/* Command Palette */}
+      <CommandPalette actions={commandPaletteActions} />
+
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Reportes Avanzados</h2>

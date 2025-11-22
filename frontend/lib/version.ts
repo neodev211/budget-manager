@@ -6,10 +6,26 @@
  */
 
 export const VERSION_INFO = {
-  version: '2.0.3',
-  release: '2025.11.22.003',
+  version: '2.0.4',
+  release: '2025.11.22.004',
   releaseDate: '2025-11-22',
   changelog: [
+    {
+      version: '2.0.4',
+      release: '2025.11.22.004',
+      date: '2025-11-22',
+      changes: [
+        'Feature: Comprehensive keyboard shortcuts system with useKeyboardShortcuts hook',
+        'Feature: CommandPalette component for quick access to actions (Ctrl+K)',
+        'Feature: Page-specific shortcuts (Ctrl+N create, Ctrl+S save, Escape cancel)',
+        'Feature: Command palette with searchable actions and categories',
+        'Improvement: Smart focus management - focus shifts to relevant inputs',
+        'Improvement: Keyboard navigation in command palette (Arrow keys, Enter)',
+        'Improvement: Visual keyboard shortcut indicators throughout the app',
+        'Accessibility: Full keyboard navigation without requiring mouse',
+        'UX: Power users can now work entirely with keyboard shortcuts',
+      ],
+    },
     {
       version: '2.0.3',
       release: '2025.11.22.003',
