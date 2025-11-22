@@ -6,10 +6,22 @@
  */
 
 export const VERSION_INFO = {
-  version: '1.1.2',
-  release: '2025.11.20.003',
+  version: '2.0.0',
+  release: '2025.11.20.004',
   releaseDate: '2025-11-20',
   changelog: [
+    {
+      version: '2.0.0',
+      release: '2025.11.20.004',
+      date: '2025-11-20',
+      changes: [
+        'Sync: Frontend aligned with backend v2.0.0 - Database optimization release',
+        'Backend: Migrated usedAmount to materialized column for ~90% query reduction',
+        'Backend: Eliminated N+1 queries in provision operations via transactional updates',
+        'Backend: Removed *WithUsedAmount methods, simplified repository interface',
+        'No frontend code changes - Compatible with backend optimization',
+      ],
+    },
     {
       version: '1.1.2',
       release: '2025.11.20.003',
